@@ -1,0 +1,8 @@
+Please review the code in this specific context.
+Focus on identifying:
+1. Potential bugs or issues
+2. Opportunities for optimization
+3. Architectural improvements
+4. Best practices that should be applied
+
+If you need to create files, place them in appropriate locations following the project structure.

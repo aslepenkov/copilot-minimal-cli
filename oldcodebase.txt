@@ -1,0 +1,350 @@
+ /**
+  * CLI for GitHub Copilot Chat
+  *
+  * This script provides a simple CLI interface to authenticate with GitHub and
+  * send requests to the GitHub Copilot API. It uses the same authentication flow
+  * and API endpoints as the VS Code Copilot Chat extension.
+  *
+  * Usage:
+  *   npm run cli auth - Authenticate with GitHub and get a token
+  *   npm run cli <question> - Send a question to Copilot
+  *
+  * export declare enum RequestType {
+ 	CopilotToken = "CopilotToken",
+ 	ChatCompletions = "ChatCompletions",
+ 	ProxyChatCompletions = "ProxyChatCompletions",
+ 	RemoteAgent = "RemoteAgent",
+ 	RemoteAgentChat = "RemoteAgentChat",
+ 	CodeReviewAgent = "CodeReviewAgent",
+ 	CAPIEmbeddings = "CAPIEmbeddings",
+ 	DotcomEmbeddings = "DotcomEmbeddings",
+ 	EmbeddingsModels = "EmbeddingsModels",
+ 	Models = "Models",
+ 	Chunks = "Chunks",
+ 	EmbeddingsCodeSearch = "EmbeddingsCodeSearch",
+ 	ListSkills = "ListSkills",
+ 	SearchSkill = "SearchSkill",
+ 	ContentExclusion = "ContentExclusion",
+ 	Telemetry = "Telemetry",
+ 	CopilotUserInfo = "CopilotUserInfo",
+ 	ModelPolicy = "ModelPolicy",
+ 	ListModel = "ListModel",
+ 	SnippyMatch = "SnippyMatch",
+ 	SnippyFilesForMatch = "SnippyFlesForMatch",
+ 	CodingGuidelines = "CodingGuidelines",
+ 	EmbeddingsIndex = "EmbedingsIndex"
+ }
+  */
+ // export interface IAbortSignal {
+ // 	readonly aborted: boolean;
+ // 	addEventListener(type: 'abort', listener: (this: AbortSignal) => void): void;
+ // 	removeEventListener(type: 'abort', listener: (this: AbortSignal) => void): void;
+ // }
+ // interface IAbortController {
+ // 	readonly signal: IAbortSignal;
+ // 	abort(): void;
+ // }
+ // interface FetchOptions {
+ // 	headers?: { [name: string]: string };
+ // 	body?: string;
+ // 	timeout?: number;
+ // 	json?: any;
+ // 	method?: 'GET' | 'POST';
+ // 	signal?: IAbortSignal;
+ // }
+ // interface IFetcherService {
+ // 	readonly _serviceBrand: undefined;
+ // 	getUserAgentLibrary(): string;
+ // 	fetch(url: string, options: FetchOptions): Promise<Response>;
+ // 	disconnectAll(): Promise<unknown>;
+ // 	makeAbortController(): IAbortController;
+ // 	isAbortError(e: any): boolean;
+ // 	isInternetDisconnectedError(e: any): boolean;
+ // 	isFetcherError(e: any): boolean;
+ // 	getUserMessageForFetcherError(err: any): string;
+ // }
+ interface IHeaders extends Iterable<[string, string]> {
+ 	get(name: string): string | null;
+ }
+ class Response {
+ 	ok = this.status >= 200 && this.status < 300;
+ 	constructor(
+ 		readonly status: number,
+ 		readonly statusText: string,
+ 		readonly headers: IHeaders,
+ 		private readonly getText: () => Promise<string>,
+ 		private readonly getJson: () => Promise<any>,
+ 		private readonly getBody: () => Promise<unknown | null>
+ 	) { }
+ 	async text(): Promise<string> {
+ 		return this.getText();
+ 	}
+ 	async json(): Promise<any> {
+ 		return this.getJson();
+ 	}
+ 	/** Async version of the standard .body field. */
+ 	async body(): Promise<unknown | null> {
+ 		return this.getBody();
+ 	}
+ }
+ import { CAPIClient, RequestType } from '@vscode/copilot-api';
+ import { exec } from 'child_process';
+ import dotenv from 'dotenv';
+ import fs from 'fs';
+ import path from 'path';
+ import { fetch } from 'undici';
+ import { promisify } from 'util';
+ // Load environment variables
+ dotenv.config();
+ // Constants for GitHub OAuth
+ const REQUEST1_URL = 'https://github.com/login/device/code';
+ const REQUEST2_URL = 'https://github.com/login/oauth/access_token';
+ const CLIENT_ID = '01ab8ac9400c4e429b23';
+ // Use the Copilot model name
+ const COPILOT_MODEL = 'gpt-4';
+ // License agreement - taken from the extension codebase
+ const LICENSE_AGREEMENT = 'I accept the GitHub Copilot license terms and telemetry collection, the Microsoft Privacy Statement, and the Microsoft Terms of Use.';
+ // Create a simplified version of the CAPIClient for CLI use
+ function createCAPIClient(token: string) {
+ 	return new CAPIClient({
+ 		machineId: 'cli-machine-id',
+ 		sessionId: 'cli-session-id',
+ 		vscodeVersion: 'cli-vscode',
+ 		buildType: 'dev',
+ 		name: 'GitHubCopilotChat',
+ 		version: '0.1.0',
+ 	}, LICENSE_AGREEMENT, {
+ 		fetch: async (url: string, options: any) => {
+ 			const response = await fetch(url, {
+ 				...options,
+ 				headers: {
+ 					...options.headers,
+ 					'User-Agent': 'GitHubCopilotChat/0.1.0',
+ 					'Authorization': `Bearer ${token}`
+ 				}
+ 			});
+ 			return {
+ 				ok: response.ok,
+ 				status: response.status,
+ 				statusText: response.statusText,
+ 				headers: response.headers,
+ 				text: () => response.text(),
+ 				json: () => response.json(),
+ 			};
+ 		},
+ 		disconnectAll: async () => { },
+ 		makeAbortController: () => new AbortController(),
+ 		isAbortError: (e: any) => e instanceof Error && e.name === 'AbortError',
+ 		isInternetDisconnectedError: () => false,
+ 		isFetcherError: () => false,
+ 		getUserMessageForFetcherError: () => 'Unknown error',
+ 		getUserAgentLibrary: () => 'GitHubCopilotChat/0.1.0',
+ 	});
+ }
+ // Helper for terminal input
+ const keypress = async (): Promise<void> => {
+ 	if (process.stdin.isTTY) {
+ 		process.stdin.setRawMode(true);
+ 	}
+ 	return new Promise<void>(resolve =>
+ 		process.stdin.once('data', data => {
+ 			const byteArray = [...data];
+ 			if (byteArray.length > 0 && byteArray[0] === 3) {
+ 				console.log('^C');
+ 				process.exit(1);
+ 			}
+ 			if (process.stdin.isTTY) {
+ 				process.stdin.setRawMode(false);
+ 			}
+ 			resolve();
+ 		})
+ 	);
+ };
+ // Authentication function
+ async function authenticate(): Promise<string> {
+ 	console.log('Authenticating with GitHub...');
+ 	const requestOptions: any = {
+ 		method: 'POST',
+ 		body: JSON.stringify({
+ 			client_id: CLIENT_ID,
+ 			scope: 'repo',
+ 		}),
+ 		headers: {
+ 			Accept: 'application/json',
+ 			'Content-Type': 'application/json',
+ 		},
+ 	};
+ 	const request1 = await fetch(REQUEST1_URL, requestOptions);
+ 	const response1: any = await request1.json();
+ 	console.log(`Copy this code: ${response1.user_code}`);
+ 	console.log('Then press any key to launch the authorization page, paste the code in and approve the access.');
+ 	console.log(`It will take up to ${response1.interval} seconds after approval for the token to be retrieved.`);
+ 	await keypress();
+ 	console.log(`Attempting to open ${response1.verification_uri}, if it doesn't open please manually navigate to the link and paste the code.`);
+ 	const timeout = new Promise((resolve) => setTimeout(resolve, 5000));
+ 	// Use the exec function to open the URL in the default browser
+ 	const execPromise = promisify(exec);
+ 	const openBrowser = async (url: string) => {
+ 		try {
+ 			// Try to open the URL based on the platform
+ 			const platform = process.platform;
+ 			if (platform === 'win32') {
+ 				await execPromise(`start ${url}`);
+ 			} else if (platform === 'darwin') {
+ 				await execPromise(`open ${url}`);
+ 			} else {
+ 				// Assume linux/unix
+ 				await execPromise(`xdg-open ${url}`);
+ 			}
+ 		} catch (e) {
+ 			console.log(`Failed to open browser automatically. Please open ${url} manually.`);
+ 		}
+ 	};
+ 	await Promise.race([openBrowser(response1.verification_uri), timeout]);
+ 	let expiresIn = response1.expires_in;
+ 	let accessToken: string | undefined;
+ 	while (expiresIn > 0) {
+ 		const requestOptions: any = {
+ 			method: 'POST',
+ 			body: JSON.stringify({
+ 				client_id: CLIENT_ID,
+ 				device_code: response1.device_code,
+ 				grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+ 			}),
+ 			headers: {
+ 				Accept: 'application/json',
+ 				'Content-Type': 'application/json',
+ 			},
+ 		};
+ 		const response2: any = await (await fetch(REQUEST2_URL, requestOptions)).json();
+ 		expiresIn -= response1.interval;
+ 		await new Promise(resolve => setTimeout(resolve, 1000 * response1.interval));
+ 		if (response2.access_token) {
+ 			accessToken = response2.access_token;
+ 			break;
+ 		}
+ 	}
+ 	if (accessToken === undefined) {
+ 		console.log('Timed out waiting for authorization');
+ 		process.exit(1);
+ 	} else {
+ 		const envPath = path.join(process.cwd(), '.env');
+ 		const raw = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
+ 		const result = raw.split('\n')
+ 			.filter(line => !line.startsWith('GITHUB_OAUTH_TOKEN='))
+ 			.concat([`GITHUB_OAUTH_TOKEN=${accessToken}`])
+ 			.filter(line => line.trim() !== '')
+ 			.join('\n');
+ 		fs.writeFileSync(envPath, result);
+ 		console.log('Wrote token to .env');
+ 		return accessToken;
+ 	}
+ }
+ // Get token from .env or authenticate if needed
+ async function getToken(): Promise<string> {
+ 	const token = process.env.GITHUB_OAUTH_TOKEN;
+ 	if (token) {
+ 		return token;
+ 	}
+ 	return authenticate();
+ }
+ // Function to exchange GitHub token for Copilot token
+ async function getCopilotToken(githubToken: string): Promise<string> {
+ 	try {
+ 		// Create the CAPIClient with the GitHub token
+ 		const client = createCAPIClient(githubToken);
+ 		// Use the makeRequest method from CAPIClient to get a Copilot token
+ 		const response = await client.makeRequest<Response>({
+ 			headers: {
+ 				Authorization: `token ${githubToken}`,
+ 				'X-GitHub-Api-Version': '2025-04-01'
+ 			},
+ 		}, { type: "CopilotToken" });
+ 		if (!response.ok) {
+ 			throw new Error(`Failed to get Copilot token: ${response.statusText}`);
+ 		}
+ 		const data = await response.json();
+ 		return data.token;
+ 	} catch (error) {
+ 		console.error('Error getting Copilot token:', error);
+ 		process.exit(1);
+ 	}
+ }
+ // Function to send a completion request to the Copilot API
+ async function getCompletion(token: string, prompt: string): Promise<string> {
+ 	try {
+ 		// Create the CAPIClient with the Copilot token
+ 		const client = createCAPIClient(token);
+ 		// Use the makeRequest method to send a chat completion request
+ 		const response = await client.makeRequest<Response>({
+ 			method: 'POST',
+ 			body: JSON.stringify({
+ 				model: COPILOT_MODEL,
+ 				messages: [
+ 					{
+ 						role: 'system',
+ 						content: 'You are GitHub Copilot, a large language model trained by GitHub. Answer as concisely as possible.'
+ 					},
+ 					{
+ 						role: 'user',
+ 						content: prompt
+ 					}
+ 				],
+ 				temperature: 0.7,
+ 				max_tokens: 1000,
+ 			}),
+ 			headers: {
+ 				'Content-Type': 'application/json',
+ 			},
+ 		}, { type: "ChatCompletions" });
+ 		if (!response.ok) {
+ 			const errorText = await response.text();
+ 			throw new Error(`API request failed: ${response.status} ${response.statusText}\n${errorText}`);
+ 		}
+ 		const data = await response.json();
+ 		// Extract the completion text from the response
+ 		if (data.choices && data.choices.length > 0) {
+ 			return data.choices[0].message.content || '';
+ 		} else {
+ 			return 'No response received from Copilot.';
+ 		}
+ 	} catch (error: unknown) {
+ 		console.error('Error getting completion:', error);
+ 		return `Error: ${error instanceof Error ? error.message : String(error)}`;
+ 	}
+ }
+ // Main function
+ async function main(): Promise<void> {
+ 	const args = process.argv.slice(2);
+ 	const command = args[0];
+ 	if (!command) {
+ 		console.log('Usage:');
+ 		console.log('  npm run cli auth - Authenticate with GitHub and get a token');
+ 		console.log('  npm run cli <question> - Send a question to Copilot');
+ 		process.exit(0);
+ 	}
+ 	if (command === 'auth') {
+ 		await authenticate();
+ 		console.log('Authentication completed successfully');
+ 		process.exit(0);
+ 	}
+ 	// For any other command, treat it as a question to send to Copilot
+ 	try {
+ 		const githubToken = await getToken();
+ 		const copilotToken = await getCopilotToken(githubToken);
+ 		// Join all remaining arguments as the prompt
+ 		const prompt = args.join(' ');
+ 		console.log(`Sending question to Copilot: "${prompt}"`);
+ 		const response = await getCompletion(copilotToken, prompt);
+ 		console.log('\nCopilot Response:');
+ 		console.log(response);
+ 	} catch (error: unknown) {
+ 		console.error('Error:', error instanceof Error ? error.message : String(error));
+ 		process.exit(1);
+ 	}
+ }
+ // Run the main function
+ main().catch(err => {
+ 	console.error('Unhandled error:', err);
+ 	process.exit(1);
+ });

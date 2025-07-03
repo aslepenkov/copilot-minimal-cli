@@ -1,0 +1,2 @@
+aslepenkov/copilot-minimal-cli
+aslepenkov/countdown
