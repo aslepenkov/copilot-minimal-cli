@@ -54,12 +54,8 @@ function initializeCli() {
       try {
         // Use the token from options if provided
         if (options.token) {
+          console.log('Using provided GitHub token for authentication');
           process.env.GITHUB_OAUTH_TOKEN = options.token;
-        }
-
-        if (!promptArgs || promptArgs.length === 0) {
-          console.log('Usage: copilot-cli ask <your question>');
-          process.exit(0);
         }
 
         const prompt = options.prompt || '';
