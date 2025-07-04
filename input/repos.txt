@@ -1,2 +1,2 @@
-https://github.com/aslepenkov/copilot-minimal-cli
-https://github.com/aslepenkov/countdown
+aslepenkov/copilot-minimal-cli
+aslepenkov/countdown
