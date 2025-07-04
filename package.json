@@ -1,0 +1,34 @@
+{
+  "name": "copilot-minimal-cli",
+  "version": "0.1.0",
+  "description": "A minimal CLI for interacting with GitHub Copilot API",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "node esbuild.config.js && tsc",
+    "clean": "rm -rf dist",
+    "auth": "node --loader ts-node/esm src/index.ts auth",
+    "ask": "node --loader ts-node/esm src/index.ts ask"
+  },
+  "keywords": [
+    "copilot",
+    "github",
+    "cli",
+    "ai",
+    "assistant"
+  ],
+  "author": "aslepenkov",
+  "license": "MIT",
+  "dependencies": {
+    "@vscode/copilot-api": "^0.1.1",
+    "commander": "^14.0.0",
+    "dotenv": "^17.0.1",
+    "undici": "^7.10.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.10",
+    "esbuild": "^0.25.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}

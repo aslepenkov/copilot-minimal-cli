@@ -1,0 +1,8 @@
+Please analyze this sample project and:
+
+1. Identify any bugs or issues in the code
+2. Suggest improvements for each file
+3. Create a new utility.js file with additional helper functions
+4. Create a simple index.js file that demonstrates the usage of the calculator and utils
+
+Focus on making the code more robust, adding proper error handling, and improving performance.
