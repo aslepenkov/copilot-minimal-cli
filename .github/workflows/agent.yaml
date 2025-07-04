@@ -47,9 +47,9 @@ jobs:
       run: pnpm install
 
     - name: Mask Copilot token
-      run: echo "::add-mask::${{ secrets.GITHUB_TOKEN }}"
+      run: echo "::add-mask::${{ secrets.PAT }}"
 
     - name: Run ask[TEST]
-      run: npm run ask -- --token ${{ secrets.GITHUB_TOKEN }} --prompt "list top 5 DGP counties as table"
+      run: npm run ask -- --token ${{ secrets.PAT }} --prompt "list top 5 DGP counties as table"
 
   
