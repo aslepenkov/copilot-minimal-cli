@@ -1,0 +1,42 @@
+name: Run agent mode
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-console-app:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '24'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Clone repositories from list
+      run: |
+        if [ -f "input/repos.txt" ]; then
+          while IFS= read -r repo || [ -n "$repo" ]; do
+            if [ -n "$repo" ]; then
+              echo "Cloning $repo (main branch, shallow)"
+              git clone --branch main --depth 1 "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$repo.git" "input/$(basename $repo)"
+            fi
+          done < input/repos.txt
+        else
+          echo "input/repos.txt file not found, skipping repository cloning"
+        fi
+
+    - name: Show input folder file tree [DEBUG]
+      run: |
+        echo "File tree of input folder after cloning:"
+        ls -R input
+
+    # - name: Run Console App with GitHub Token
+    #   run: node app.js ${{ secrets.GITHUB_TOKEN }}
