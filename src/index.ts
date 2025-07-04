@@ -49,15 +49,12 @@ function initializeCli() {
     .option('-m, --max-tokens <number>', 'Set the maximum number of tokens in the response', '1000')
     .option('-s, --system-prompt <text>', 'Custom system prompt to use')
     .option('--token <token>', 'GitHub token to use for authentication')
-    .action(async (promptArgs: string[], options: AskCommandOptions & { token?: string }) => {
+    .option('--prompt <question>', 'Ask simple question')
+    .action(async (promptArgs: string[], options: AskCommandOptions & { token?: string, prompt?: string }) => {
       try {
-        // Remove any 'token sometoken' pair from promptArgs and set the token
-        if (promptArgs && promptArgs.length > 1) {
-          let idx;
-          while ((idx = promptArgs.findIndex((arg) => arg === 'token')) !== -1 && promptArgs[idx + 1]) {
-            process.env.GITHUB_OAUTH_TOKEN = promptArgs[idx + 1];
-            promptArgs.splice(idx, 2);
-          }
+        // Use the token from options if provided
+        if (options.token) {
+          process.env.GITHUB_OAUTH_TOKEN = options.token;
         }
 
         if (!promptArgs || promptArgs.length === 0) {
@@ -65,13 +62,13 @@ function initializeCli() {
           process.exit(0);
         }
 
-        const prompt = promptArgs.join(' ');
+        const prompt = options.prompt || '';
         await askCopilot(prompt, options);
       } catch (error) {
         logger.error('Failed to get response from Copilot', error);
         process.exit(1);
       }
-    });
+    }); 
 
   // If no arguments, show help
   if (!process.argv.slice(2).length) {

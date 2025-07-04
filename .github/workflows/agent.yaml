@@ -50,6 +50,6 @@ jobs:
       run: echo "::add-mask::${{ secrets.GITHUB_TOKEN }}"
 
     - name: Run ask[TEST]
-      run: npm run ask -- --token ${{ secrets.GITHUB_TOKEN }} "list top 5 DGP counties as table"
+      run: npm run ask -- --token ${{ secrets.GITHUB_TOKEN }} --prompt "list top 5 DGP counties as table"
 
   

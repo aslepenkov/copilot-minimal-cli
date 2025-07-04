@@ -25,7 +25,7 @@ const CLIENT_CONFIG = {
  */
 export async function getToken(): Promise<string> {
   // Ensure .env is loaded
-  dotenv.config();
+  // dotenv.config();
   
   const token = process.env.GITHUB_OAUTH_TOKEN;
   if (token) {
