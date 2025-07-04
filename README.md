@@ -1,143 +1,77 @@
-# Copilot Minimal CLI
+# MVP Code Analyzer
 
-A lightweight command-line interface for interacting with GitHub Copilot API directly from your terminal.
+A minimalistic, prompt-driven code analysis tool powered by GitHub Copilot API.
+<img width="1033" height="573" alt="Screenshot 2025-07-11 114906" src="https://github.com/user-attachments/assets/b8dc1357-0613-4697-9daa-0d37ea130be3" />
+<img width="1036" height="600" alt="Screenshot 2025-07-11 115037" src="https://github.com/user-attachments/assets/9e750c90-3ca5-463d-805c-7ab7d6eaa036" />
 
-## Prerequisites
 
-- Node.js (v18 or later)
-- npm or pnpm
-- GitHub account with Copilot access
+## Features
 
-## Installation
+- **Fully externalized prompts**: All instructions stored in `input/` text files
+- **Tool-based analysis**: Read-only file operations for safe code exploration
+- **GitHub Copilot integration**: Uses official Copilot API for analysis
+- **Zero hardcoded prompts**: All behavior controlled via external files
+
+## Quick Start
 
 ```bash
-# Clone the repository
-git clone https://github.com/aslepenkov/copilot-minimal-cli.git
-cd copilot-minimal-cli
-
 # Install dependencies
 npm install
 
-# Build the project
-npm run build
+# Run analysis on current workspace
+npm run analyze
+
+npm run analyze -- --workspace ./some folder/ --max-iterations 2 --debug
 ```
 
-## Authentication
+## Docker Usage
 
-Before using the CLI, you need to authenticate with GitHub:
+Build and run the application in a Docker container:
 
 ```bash
-npm run auth
+# Build the Docker image
+docker build -t copilot-minimal-cli:latest .
+
+# Rebuild without cache (removes old image and builds fresh)
+docker image prune -f
+
+# Run with persistent data storage (container manages its own .env)
+docker run -d --name copilot-analyzer \
+    -v $(pwd)/logs:/app/logs \
+    -v $(pwd)/input:/app/input \
+    --restart unless-stopped \
+    copilot-minimal-cli:latest
+
+# Execute analysis commands in running container
+docker exec -it copilot-analyzer npm run analyze  # uses /app/input/ by default
+docker exec -it copilot-analyzer npm run analyze -- --workspace ./input/  --max-iterations 2 --debug
+
+# Get shell access to running container
+docker exec -it copilot-analyzer sh
+
+# Stop and remove container
+docker stop copilot-analyzer && docker rm copilot-analyzer
 ```
 
-This will guide you through a device flow authentication process:
-1. A code will be displayed in your terminal
-2. You'll be directed to open GitHub in your browser
-3. Enter the code and authorize the application
-4. Wait for the authentication to complete
+**Volume Mappings:**
+- `logs:/app/logs` - Analysis logs and outputs
+- `input:/app/input` - Live-reload prompts and configuration (optional)
 
-## Usage
+## Configuration
 
-### Ask Copilot a Question
+- `input/prompt.txt` - Analysis request
+- `input/system.txt` - System instructions and available tools
+- `input/user-prompt-template.txt` - User prompt template
+- `input/tool-results-template.txt` - Tool results template
 
-```bash
-npm run ask "How do I implement a binary search in JavaScript?"
-```
+## Available Tools
 
-Or with options:
+- `read_file` - Read file contents
+- `list_directory` - List directory contents  
+- `get_workspace_structure` - Get complete workspace structure
+- `find_all_files` - Find all files in workspace
 
-```bash
-npm run ask --temperature 0.8 --max-tokens 2000 "Explain the visitor pattern"
-```
+## Requirements
 
-Options:
-- `-t, --temperature <number>`: Set the temperature (0.0-1.0) for response randomness (default: 0.7)
-- `-m, --max-tokens <number>`: Set the maximum number of tokens in the response (default: 1000)
-- `-s, --system-prompt <text>`: Custom system prompt to use
-
-## Project Structure
-
-```
-.
-├── src/                  # Source code
-│   ├── commands/         # CLI command implementations
-│   │   ├── ask.ts        # Main command for querying Copilot
-│   │   ├── auth.ts       # Authentication with GitHub
-│   │   └── index.ts      # Command exports
-│   ├── services/         # Core services
-│   │   ├── copilotService.ts      # Handles API communication with Copilot
-│   │   ├── promptService.ts       # Manages prompt creation and formatting
-│   │   ├── inputService/          # Handles various input sources
-│   │   │   ├── localFileSource.ts # Processes local file inputs
-│   │   │   ├── sourceFactory.ts   # Factory for creating input sources
-│   │   │   └── sourceInterface.ts # Input source interface definition
-│   │   └── outputService/         # Manages output generation
-│   │       ├── fileGenerator.ts   # Generates output files
-│   │       ├── outputInterface.ts # Output interface definition
-│   │       └── streamLogger.ts    # Handles stream logging
-│   ├── utils/            # Utility functions
-│   │   ├── index.ts      # Utility exports
-│   │   └── parser.ts     # Input parsing utilities
-│   ├── config.ts         # Configuration settings
-│   ├── index.ts          # Entry point
-│   └── types.ts          # TypeScript type definitions
-├── prompts/              # System and user prompts
-│   ├── general/          # General-purpose prompts
-│   │   └── base.txt      # Base prompt template
-│   └── specific/         # Project-specific prompts
-│       ├── default.txt   # Default project prompt
-│       └── sample-project.txt # Sample project-specific prompt
-├── input/                # Sample input projects for processing
-│   ├── aspire-sample/    # .NET Aspire sample project
-│   └── react-sample/     # React sample project
-│      
-├── output/               # Generated output files (not tracked in git)
-│                         # This is where files created by the CLI are stored
-├── esbuild.config.js     # ESBuild configuration
-├── package.json          # Project dependencies
-├── tsconfig.json         # TypeScript configuration
-└── AGENT_MODE.md         # Documentation for agent mode
-```
-
-### Key Folders
-
-#### Input Folder
-The `input/` folder contains sample projects that can be processed by the CLI in agent mode. These projects serve as examples and can be analyzed by Copilot to generate output. Current samples include:
-
-#### Prompts Folder
-The `prompts/` folder contains text files that define system and user prompts for different scenarios:
-
-- **general/base.txt**: The base prompt template used for all interactions
-- **specific/**: Contains project-specific prompts that can be used when processing different types of projects
-
-#### Output Folder
-The `output/` folder (created at runtime) is where the CLI stores generated files when running in agent mode. This includes:
-
-- Generated code files
-- Documentation
-- Analysis reports
-- Any other artifacts produced by Copilot
-
-## Flow Diagram
-
-```
-+-------------+     +-------------+     +-------------+     +-------------+
-|             |     |             |     |             |     |             |
-|  User Input +---->+ Auth Service+---->+ Copilot API +---->+ Formatting  |
-|             |     |             |     |             |     |             |
-+-------------+     +-------------+     +-------------+     +-------------+
-                                                                  |
-                                                                  v
-                                                           +-------------+
-                                                           |             |
-                                                           |    Output   |
-                                                           |             |
-                                                           +-------------+
-```
-
-## Agent Mode
-
-See `AGENT_MODE.md` for detailed information about agent mode architecture and how to use it for processing entire folders/projects and generating files based on Copilot's analysis.
-
-## License
-MIT
+- Node.js 20+
+- GitHub token with Copilot access
