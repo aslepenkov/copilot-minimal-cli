@@ -26,7 +26,9 @@ jobs:
           while IFS= read -r repo || [ -n "$repo" ]; do
             if [ -n "$repo" ]; then
               echo "Cloning $repo (main branch, shallow)"
-              git clone --branch main --depth 1 "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$repo.git" "input/$(basename $repo)"
+              # Try to clone main, fallback to master if main does not exist
+              git clone --branch main --depth 1 "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$repo.git" "input/$(basename $repo)" \
+                || git clone --branch master --depth 1 "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$repo.git" "input/$(basename $repo)"
             fi
           done < input/repos.txt
         else
