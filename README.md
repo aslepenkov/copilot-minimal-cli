@@ -45,12 +45,6 @@ npm run ask -- --prompt "list top 5 DGP counties as table"
 npm run ask -- --token GITHUB_OAUTH_TOKEN --prompt "list top 5 DGP counties as table"
 ```
 
-
-Options:
-- `-t, --temperature <number>`: Set the temperature (0.0-1.0) for response randomness (default: 0.7)
-- `-m, --max-tokens <number>`: Set the maximum number of tokens in the response (default: 1000)
-- `-s, --system-prompt <text>`: Custom system prompt to use
-
 ## Project Structure
 
 ```

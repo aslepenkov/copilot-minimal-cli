@@ -45,9 +45,6 @@ function initializeCli() {
   program
     .command('ask [prompt...]')
     .description('Ask GitHub Copilot a question')
-    .option('-t, --temperature <number>', 'Set the temperature (0.0-1.0) for response randomness', '0.7')
-    .option('-m, --max-tokens <number>', 'Set the maximum number of tokens in the response', '1000')
-    .option('-s, --system-prompt <text>', 'Custom system prompt to use')
     .option('--token <token>', 'GitHub token to use for authentication')
     .option('--prompt <question>', 'Ask simple question')
     .action(async (promptArgs: string[], options: AskCommandOptions & { token?: string, prompt?: string }) => {
