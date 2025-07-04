@@ -31,9 +31,6 @@ jobs:
         echo "File tree of input folder after cloning:"
         ls -R input
 
-    # - name: Run Console App with GitHub Token
-    #   run: node app.js ${{ secrets.GITHUB_TOKEN }}
-
     - name: Setup pnpm
       uses: pnpm/action-setup@v3
       with:
@@ -48,3 +45,11 @@ jobs:
 
     - name: Install dependencies
       run: pnpm install
+
+    - name: Mask Copilot token
+      run: echo "::add-mask::${{ secrets.GITHUB_TOKEN }}"
+
+    - name: Run ask[TEST]
+      run: npm run ask -- --token ${{ secrets.GITHUB_TOKEN }} "list top 5 DGP counties as table"
+
+  

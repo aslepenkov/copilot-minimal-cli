@@ -48,8 +48,18 @@ function initializeCli() {
     .option('-t, --temperature <number>', 'Set the temperature (0.0-1.0) for response randomness', '0.7')
     .option('-m, --max-tokens <number>', 'Set the maximum number of tokens in the response', '1000')
     .option('-s, --system-prompt <text>', 'Custom system prompt to use')
-    .action(async (promptArgs: string[], options: AskCommandOptions) => {
+    .option('--token <token>', 'GitHub token to use for authentication')
+    .action(async (promptArgs: string[], options: AskCommandOptions & { token?: string }) => {
       try {
+        // Remove any 'token sometoken' pair from promptArgs and set the token
+        if (promptArgs && promptArgs.length > 1) {
+          let idx;
+          while ((idx = promptArgs.findIndex((arg) => arg === 'token')) !== -1 && promptArgs[idx + 1]) {
+            process.env.GITHUB_OAUTH_TOKEN = promptArgs[idx + 1];
+            promptArgs.splice(idx, 2);
+          }
+        }
+
         if (!promptArgs || promptArgs.length === 0) {
           console.log('Usage: copilot-cli ask <your question>');
           process.exit(0);
