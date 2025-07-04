@@ -41,14 +41,10 @@ This will guide you through a device flow authentication process:
 ### Ask Copilot a Question
 
 ```bash
-npm run ask "How do I implement a binary search in JavaScript?"
+npm run ask -- --prompt "list top 5 DGP counties as table"
+npm run ask -- --token GITHUB_OAUTH_TOKEN --prompt "list top 5 DGP counties as table"
 ```
 
-Or with options:
-
-```bash
-npm run ask --temperature 0.8 --max-tokens 2000 "Explain the visitor pattern"
-```
 
 Options:
 - `-t, --temperature <number>`: Set the temperature (0.0-1.0) for response randomness (default: 0.7)
