@@ -36,6 +36,11 @@ This will guide you through a device flow authentication process:
 3. Enter the code and authorize the application
 4. Wait for the authentication to complete
 
+# Or with Docker (token will be printed, you must save it and use it in future calls):
+docker build -t copilot-cli .
+docker run -it --name copilot-container copilot-cli npm run auth
+```
+
 ## Usage
 
 ### Ask Copilot a Question
