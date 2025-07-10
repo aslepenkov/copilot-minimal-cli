@@ -1,52 +1,44 @@
 {
   "compilerOptions": {
-    // Specifies ECMAScript target version: ES2022 supports modern features like top-level await
     "target": "ES2022",
-    // Sets module code generation to ESM
     "module": "ESNext",
-    // Modern TypeScript module resolution strategy
     "moduleResolution": "node",
-    // Enables compatibility between different module formats
-    "esModuleInterop": true,
-    // Ensures consistent file casing in imports (important for cross-platform development)
-    "forceConsistentCasingInFileNames": true,
-    // Enables all strict type-checking options for better type safety
+    "lib": ["ES2022"],
+    "outDir": "./dist",
+    "rootDir": ".",
     "strict": true,
-    // Skips type checking of declaration files to speed up compilation
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
-    // Sets output directory for compiled JavaScript files
-    "outDir": "dist",
-    // Generates corresponding .d.ts declaration files
+    "forceConsistentCasingInFileNames": true,
     "declaration": true,
-    // Generates source map files for debugging
+    "declarationMap": true,
     "sourceMap": true,
-    // Allows importing JSON files as modules
+    "removeComments": false,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "exactOptionalPropertyTypes": false,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": false,
+    "noUncheckedIndexedAccess": false,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
     "resolveJsonModule": true,
-    // Specifies the root directory of TypeScript source files
-    "rootDir": "src",
-    // Sets the base directory for resolving non-relative module names
-    "baseUrl": "src",
-    // Configures path mapping for module resolution
-    "paths": {
-      "@/*": [
-        "*"
-      ]
-    },
-    // Don't emit JS files (let esbuild handle this)
-    "noEmit": false
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "baseUrl": ".",
+    "typeRoots": ["node_modules/@types"]
   },
-  "ts-node": {
-    "esm": true,
-    "experimentalSpecifierResolution": "node"
-  },
-  // Specifies files to include in compilation
   "include": [
-    "src/**/*"
+    "**/*.ts"
   ],
-  // Specifies files to exclude from compilation
   "exclude": [
     "node_modules",
     "dist",
-    "input"
+    "**/*.test.ts",
+    "**/*.spec.ts"
   ]
 }

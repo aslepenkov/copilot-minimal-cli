@@ -1,34 +1,42 @@
 {
-  "name": "copilot-minimal-cli",
-  "version": "0.1.0",
-  "description": "A minimal CLI for interacting with GitHub Copilot API",
-  "main": "dist/index.js",
+  "name": "mvp-code-analyzer",
+  "version": "1.0.0",
+  "description": "MVP for general purpose code analysis using GitHub Copilot API",
   "type": "module",
+  "main": "./dist/agent.js",
+  "types": "dist/agent.d.ts",
   "scripts": {
-    "build": "node esbuild.config.js && tsc",
-    "clean": "rm -rf dist",
-    "auth": "node --loader ts-node/esm src/index.ts auth",
-    "ask": "node --loader ts-node/esm src/index.ts ask"
+    "build": "tsc",
+    "start": "tsx cli.ts analyze",
+    "analyze": "tsx cli.ts analyze",
+    "dev": "tsx cli.ts analyze --debug",
+    "clean": "rimraf dist",
+    "test": "tsx cli.ts analyze --workspace ../",
+    "example": "tsx example.ts"
   },
   "keywords": [
-    "copilot",
-    "github",
-    "cli",
     "ai",
-    "assistant"
+    "business-analysis",
+    "copilot",
+    "entity-extraction",
+    "code-analysis",
+    "mvp"
   ],
-  "author": "aslepenkov",
+  "author": "AI Assistant",
   "license": "MIT",
   "dependencies": {
     "@vscode/copilot-api": "^0.1.1",
-    "commander": "^14.0.0",
-    "dotenv": "^17.0.1",
-    "undici": "^7.10.0"
+    "fs-extra": "^11.2.0",
+    "dotenv": "^16.3.0"
   },
   "devDependencies": {
-    "@types/node": "^24.0.10",
-    "esbuild": "^0.25.5",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "@types/node": "^20.11.0",
+    "@types/fs-extra": "^11.0.4",
+    "typescript": "^5.3.0",
+    "tsx": "^4.0.0",
+    "rimraf": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   }
 }
