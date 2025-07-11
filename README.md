@@ -75,3 +75,160 @@ docker stop copilot-analyzer && docker rm copilot-analyzer
 
 - Node.js 20+
 - GitHub token with Copilot access
+
+## ARCHITECTURE
+
+The MVP Code Analyzer follows a modular, clean architecture with clear separation of concerns.
+
+### System Overview
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        MVP Code Analyzer                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────┐    ┌──────────────┐    ┌─────────────────────┐ │
+│  │    CLI      │───▶│    Agent     │───▶│   Copilot API      │ │
+│  │  (cli.ts)   │    │  (agent.ts)  │    │ (copilot-api.ts)    │ │
+│  └─────────────┘    └──────┬───────┘    └─────────────────────┘ │
+│                             │                                   │
+│                             ▼                                   │
+│  ┌─────────────┐    ┌──────────────┐    ┌─────────────────────┐ │
+│  │   Input     │    │     Tools    │    │    File System      │ │
+│  │   Files     │    │   Registry   │    │   (ReadOnly)        │ │
+│  │             │    │              │    │                     │ │
+│  └─────────────┘    └──────────────┘    └─────────────────────┘ │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Core Components
+
+#### 1. CLI Layer (`cli.ts`)
+```
+┌─────────────────────────────────────────┐
+│              CLI Interface              │
+├─────────────────────────────────────────┤
+│ • Argument parsing                      │
+│ • Configuration setup                   │
+│ • Error handling                        │
+│ • Result display                        │
+│                                         │
+│ Commands:                               │
+│ ├─ analyze [prompt]                     │
+│ ├─ --workspace <path>                   │
+│ ├─ --debug                              │
+│ └─ --max-iterations <n>                 │
+└─────────────────────────────────────────┘
+```
+
+#### 2. Agent Core (`agent.ts`)
+```
+┌─────────────────────────────────────────┐
+│            MVPStandaloneAgent           │
+├─────────────────────────────────────────┤
+│                                         │
+│ ┌─────────────────────────────────────┐ │
+│ │        Analysis Engine              │ │
+│ │ ┌─────────────────────────────────┐ │ │
+│ │ │  1. Read prompts from input/    │ │ │
+│ │ │  2. Build context with tools    │ │ │
+│ │ │  3. Call Copilot API            │ │ │
+│ │ │  4. Parse tool calls            │ │ │
+│ │ │  5. Execute tools               │ │ │
+│ │ │  6. Continue until complete     │ │ │
+│ │ └─────────────────────────────────┘ │ │
+│ └─────────────────────────────────────┘ │
+│                                         │
+│ ┌─────────────────────────────────────┐ │
+│ │           Components                │ │
+│ │ ├─ FileSystem (readonly)            │ │
+│ │ ├─ Logger (JSONL files)             │ │
+│ │ ├─ ToolRegistry                     │ │
+│ │ └─ CopilotAPI                       │ │
+│ └─────────────────────────────────────┘ │
+└─────────────────────────────────────────┘
+```
+
+#### 3. Tools Architecture (`tools/`)
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        Tools Module                             │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────────┐         ┌────────────────────────────────┐ │
+│  │  interfaces.ts  │─── ────▶│         Tool Registry         │ │
+│  │                 │         │        (registry.ts)            │ │
+│  │ ┌─────────────┐ │         │                                 │ │
+│  │ │    ITool    │ │         │  ┌─────────────────────────────┐ │ │
+│  │ └─────────────┘ │         │  │      register(tool)        │ │ │
+│  │ ┌─────────────┐ │         │  │      get(name)             │ │ │
+│  │ │ IFileSystem │ │         │  │      getAll()              │ │ │
+│  │ └─────────────┘ │         │  │      initializeReadOnly()  │ │ │
+│  └─────────────────┘         │  └─────────────────────────────┘ │ │
+│                               └─────────────────────────────────┘ │
+│                                                                 │
+│  Individual Tools:                                              │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
+│  │  read-file.ts   │  │list-directory.ts│  │workspace-       │ │
+│  │                 │  │                 │  │structure.ts     │ │
+│  │ ReadFileTool    │  │ListDirectoryTool│  │GetWorkspace     │ │
+│  │ • 5KB limit     │  │ • Safe listing  │  │StructureTool    │ │
+│  │ • Error handle  │  │ • Entry count   │  │ • Tree view     │ │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
+│                                                                │
+│  ┌──────────────────┐          ┌─────────────────────────────┐ │
+│  │  find-files.ts   │          │         index.ts            │ │
+│  │                  │          │     (Central exports)       │ │
+│  │ FindCodeFilesTool│          │                             │ │
+│  │ • File discovery │          │ export { ITool, IFileSystem,│ │
+│  │ • Filter logic   │          │          ToolRegistry, ...} │ │
+│  └──────────────────┘          └─────────────────────────────┘ │
+└────────────────────────────────────────────────────────────────┘
+```
+
+#### 4. Data Flow
+```
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│   User      │───▶│    CLI      │───▶│   Agent     │───▶│  Copilot    │
+│   Input     │    │   Parser    │    │   Engine    │    │     API     │
+└─────────────┘    └─────────────┘    └─────┬───────┘    └─────────────┘
+                                             │
+┌─────────────┐    ┌─────────────┐           ▼
+│   Results   │◀───│   Logger    │    ┌─────────────┐
+│   Display   │    │   (JSONL)   │    │    Tools    │
+└─────────────┘    └─────────────┘    │  Execution  │
+                                      └─────┬───────┘
+┌─────────────┐    ┌─────────────┐           ▼
+│   Input     │───▶│ File System │    ┌─────────────┐
+│   Files     │    │ (ReadOnly)  │◀───│  Workspace  │
+│             │    │             │    │   Access    │
+└─────────────┘    └─────────────┘    └─────────────┘
+```
+
+#### 5. File Structure
+```
+copilot-minimal-cli/
+├── cli.ts                 # Entry point, argument parsing
+├── agent.ts               # Core analysis engine
+├── auth.ts                # GitHub token management
+├── copilot-api.ts         # Copilot API wrapper
+├── tools/                 # Modular tool system
+│   ├── index.ts           # Central exports
+│   ├── interfaces.ts      # Core interfaces
+│   ├── registry.ts        # Tool management
+│   ├── read-file.ts       # File reading tool
+│   ├── list-directory.ts  # Directory listing tool
+│   ├── workspace-structure.ts # Structure analysis
+│   └── find-files.ts      # File discovery tool
+├── input/                 # External configuration
+│   ├── prompt.txt         # Analysis request
+│   ├── system.txt         # System instructions
+│   ├── user-prompt-template.txt
+│   └── tool-results-template.txt
+├── logs/                  # Analysis outputs
+│   ├── llm_output_*.jsonl # LLM interactions
+│   └── analysis_*.jsonl   # Analysis results
+└── README.md              # This documentation
+```
+

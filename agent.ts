@@ -11,15 +11,9 @@
 import * as path from 'path';
 import fs from 'fs-extra';
 import { MVPCopilotAPI } from './copilot-api';
+import { ITool, IFileSystem, ToolRegistry } from './tools';
 
 // MVP-focused interfaces
-interface IFileSystem {
-    readFile(filePath: string): Promise<string>;
-    listDirectory(dirPath: string): Promise<string[]>;
-    exists(filePath: string): Promise<boolean>;
-    getWorkspaceStructure(maxSize?: number): Promise<string>;
-}
-
 interface ILogger {
     logLLMOutput(prompt: string, response: string, metadata?: any): Promise<void>;
     logAnalysis(analysis: any): Promise<void>;
@@ -47,14 +41,6 @@ interface ToolCall {
     arguments: any;
     result: any;
     timestamp: Date;
-}
-
-// Tool interface for MVP
-interface ITool {
-    name: string;
-    description: string;
-    parameters: any;
-    execute(args: any): Promise<any>;
 }
 
 // File System Implementation (readonly)
@@ -192,7 +178,7 @@ export class MVPStandaloneAgent {
     private fileSystem: IFileSystem;
     private logger: ILogger;
     private copilotAPI: MVPCopilotAPI | null = null;
-    private tools: Map<string, ITool> = new Map();
+    private toolRegistry: ToolRegistry = new ToolRegistry();
     private config: MVPAgentConfig;
 
     constructor(workspacePath: string, config: MVPAgentConfig) {
@@ -225,7 +211,7 @@ export class MVPStandaloneAgent {
         // Build initial workspace context
         const workspaceStructure = await this.fileSystem.getWorkspaceStructure();
         console.log(`📊 Workspace structure loaded (${workspaceStructure.length} characters)`);
-        console.log(`🔧 Agent initialized with ${this.tools.size} readonly tools`);
+        console.log(`🔧 Agent initialized with ${this.toolRegistry.size()} readonly tools`);
     }
 
     async analyzeWorkspace(customPrompt?: string): Promise<AgentResult> {
@@ -295,7 +281,7 @@ export class MVPStandaloneAgent {
                     console.log(`🔧 Executing tool: ${toolCall.name}`);
 
                     try {
-                        const tool = this.tools.get(toolCall.name);
+                        const tool = this.toolRegistry.get(toolCall.name);
                         if (!tool) {
                             throw new Error(`Tool not found: ${toolCall.name}`);
                         }
@@ -354,17 +340,9 @@ export class MVPStandaloneAgent {
     }
 
     private async initializeReadOnlyTools(): Promise<void> {
-        // Initialize only readonly tools for MVP
-        this.registerTool(new ReadFileTool(this.fileSystem));
-        this.registerTool(new ListDirectoryTool(this.fileSystem));
-        this.registerTool(new GetWorkspaceStructureTool(this.fileSystem));
-        this.registerTool(new FindCodeFilesTool(this.fileSystem));
-
-        console.log(`🔧 Initialized ${this.tools.size} readonly tools`);
-    }
-
-    private registerTool(tool: ITool): void {
-        this.tools.set(tool.name, tool);
+        // Initialize only readonly tools for MVP using the tool registry
+        this.toolRegistry.initializeReadOnlyTools(this.fileSystem);
+        console.log(`🔧 Initialized ${this.toolRegistry.size()} readonly tools`);
     }
 
     private async buildUserPrompt(request: string): Promise<string> {
@@ -382,7 +360,7 @@ export class MVPStandaloneAgent {
 
         // Gather data for template variables
         const workspaceStructure = await this.fileSystem.getWorkspaceStructure();
-        const toolDescriptions = Array.from(this.tools.values())
+        const toolDescriptions = this.toolRegistry.getAll()
             .map(tool => `${tool.name}: ${tool.description}`)
             .join('\n');
 
@@ -496,115 +474,6 @@ export class MVPStandaloneAgent {
 
     private async readToolResultsTemplate(): Promise<string> {
         return "Results: {{results}}";
-    }
-}
-
-// MVP Tool Implementations (Readonly only)
-class ReadFileTool implements ITool {
-    name = 'read_file';
-    description = 'Read the contents of a file for analysis';
-    parameters = {
-        type: 'object',
-        properties: {
-            filePath: { type: 'string', description: 'Path to the file to read' }
-        },
-        required: ['filePath']
-    };
-
-    constructor(private fileSystem: IFileSystem) { }
-
-    async execute(args: { filePath: string }): Promise<any> {
-        try {
-            const content = await this.fileSystem.readFile(args.filePath);
-            return {
-                content: content.substring(0, 5000), // Limit content size
-                size: content.length,
-                truncated: content.length > 5000
-            };
-        } catch (error: any) {
-            return { error: error.message };
-        }
-    }
-}
-
-class ListDirectoryTool implements ITool {
-    name = 'list_directory';
-    description = 'List the contents of a directory';
-    parameters = {
-        type: 'object',
-        properties: {
-            path: { type: 'string', description: 'Path to the directory to list' }
-        },
-        required: ['path']
-    };
-
-    constructor(private fileSystem: IFileSystem) { }
-
-    async execute(args: { path: string }): Promise<any> {
-        try {
-            const entries = await this.fileSystem.listDirectory(args.path);
-            return { entries, count: entries.length };
-        } catch (error: any) {
-            return { error: error.message };
-        }
-    }
-}
-
-class GetWorkspaceStructureTool implements ITool {
-    name = 'get_workspace_structure';
-    description = 'Get the complete workspace file structure';
-    parameters = {
-        type: 'object',
-        properties: {},
-        required: []
-    };
-
-    constructor(private fileSystem: IFileSystem) { }
-
-    async execute(): Promise<any> {
-        try {
-            const structure = await this.fileSystem.getWorkspaceStructure();
-            return { structure };
-        } catch (error: any) {
-            return { error: error.message };
-        }
-    }
-}
-
-class FindCodeFilesTool implements ITool {
-    name = 'find_all_files';
-    description = 'Find all files in the workspace';
-    parameters = {
-        type: 'object',
-        properties: {},
-        required: []
-    };
-
-    constructor(private fileSystem: IFileSystem) { }
-
-    async execute(args: { extensions?: string[] }): Promise<any> {
-        try {
-            // This is a simplified implementation
-            // In practice, you'd recursively search through directories
-            const structure = await this.fileSystem.getWorkspaceStructure();
-            const lines = structure.split('\n');
-            const exclusions = ['bin', 'obj', 'node_modules', 'dist', 'build', '__pycache__', 'logs'];
-            const codeFiles = lines.filter(line => {
-                const trimmed = line.trim();
-                if (!trimmed) return false;
-                const parts = trimmed.split(path.sep);
-                // Exclude any line containing a folder in the exclusions array
-                if (exclusions.some(ex => parts.includes(ex))) return false;
-                return true;
-            });
-
-            return {
-                codeFiles,
-                count: codeFiles.length,
-            };
-        } catch (error: any) {
-            return { error: error.message };
-        }
     }
 }
 

@@ -48,7 +48,6 @@ async function auth(): Promise<string> {
         const data = await tokenResp.json() as any;
 
         if (data.access_token) {
-            // await fs.mkdir(path.dirname(".env"), { recursive: true });
             await fs.writeFile(".env", `GITHUB_TOKEN=${data.access_token}\n`);
             console.log('[SUCCESS] Authentication successful!');
             return data.access_token;
