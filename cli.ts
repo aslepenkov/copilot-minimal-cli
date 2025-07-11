@@ -11,7 +11,8 @@
 
 import * as dotenv from 'dotenv';
 import * as path from 'path';
-import { MVPStandaloneAgent, defaultMVPConfig } from './agent.js';
+import { MVPStandaloneAgent, defaultMVPConfig } from './agent';
+import { getToken } from './auth';
 
 // Load environment variables
 dotenv.config();
@@ -74,12 +75,6 @@ function parseArgs(): { command: string; prompt?: string; options: MVPCLIOptions
 			case '--debug':
 				options.debug = true;
 				break;
-			case '--copilot-key':
-				options.copilotApiKey = args[++i];
-				break;
-			case '--github-token':
-				options.githubToken = args[++i];
-				break;
 			case '--max-iterations':
 				options.maxIterations = parseInt(args[++i]) || 10;
 				break;
@@ -117,14 +112,7 @@ async function runAnalysis(prompt: string, options: MVPCLIOptions): Promise<void
 	// Validate API access
 	if (!config.copilotApiKey && !config.githubToken) {
 		console.error('❌ GitHub token or Copilot API key is required for API access');
-		console.log('💡 Set your credentials:');
-		console.log('   Option 1: export GITHUB_TOKEN=your-github-token');
-		console.log('   Option 2: export COPILOT_API_KEY=your-copilot-key');
-		console.log('   Option 3: --github-token your-token');
-		console.log('   Option 4: --copilot-key your-key');
-		console.log('\n📝 To get tokens:');
-		console.log('   GitHub: https://github.com/settings/tokens');
-		console.log('   Copilot: Use GitHub token to get Copilot access');
+		await getToken();
 		return;
 	}
 
@@ -141,15 +129,15 @@ async function runAnalysis(prompt: string, options: MVPCLIOptions): Promise<void
 		// Display results
 		console.log('\n📊 Analysis Results:');
 		console.log('==================');
-		
+
 		if (result.success) {
 			console.log(`✅ Success! Analysis completed`);
 			console.log(`🔄 Completed in ${result.iterations} iterations`);
-			
+
 			// Display analysis data
 			if (result.analysisData) {
 				const data = result.analysisData;
-				
+
 				if (data.summary) {
 					console.log(`\n📋 Summary: ${data.summary}`);
 				}

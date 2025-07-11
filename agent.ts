@@ -10,7 +10,7 @@
 
 import * as path from 'path';
 import fs from 'fs-extra';
-import { MVPCopilotAPI } from './mvp/copilot-api.js';
+import { MVPCopilotAPI } from './copilot-api';
 
 // MVP-focused interfaces
 interface IFileSystem {
@@ -40,15 +40,6 @@ interface AgentResult {
     analysisData: any; // Generic analysis data instead of just business entities
     iterations: number;
     error?: string;
-}
-
-interface BusinessEntity {
-    name: string;
-    type: 'class' | 'interface' | 'enum' | 'type' | 'function' | 'variable';
-    filePath: string;
-    description?: string;
-    properties?: string[];
-    methods?: string[];
 }
 
 interface ToolCall {
@@ -123,7 +114,7 @@ class ReadOnlyFileSystem implements IFileSystem {
             for (const entry of sortedEntries) {
                 // Skip hidden files and common build directories
                 if (entry.name.startsWith('.') ||
-                    ['node_modules', 'dist', 'build', '__pycache__', 'logs'].includes(entry.name)) {
+                    ['bin', 'obj', 'node_modules', 'dist', 'build', '__pycache__', 'logs'].includes(entry.name)) {
                     continue;
                 }
 
@@ -602,8 +593,14 @@ class FindCodeFilesTool implements ITool {
             // In practice, you'd recursively search through directories
             const structure = await this.fileSystem.getWorkspaceStructure();
             const lines = structure.split('\n');
+            const exclusions = ['bin', 'obj', 'node_modules', 'dist', 'build', '__pycache__', 'logs'];
             const codeFiles = lines.filter(line => {
-                return line.trim();
+                const trimmed = line.trim();
+                if (!trimmed) return false;
+                const parts = trimmed.split(path.sep);
+                // Exclude any line containing a folder in the exclusions array
+                if (exclusions.some(ex => parts.includes(ex))) return false;
+                return true;
             });
 
             return {

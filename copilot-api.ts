@@ -2,7 +2,6 @@
  * MVP Copilot Integration
  * 
  * GitHub Copilot API integration for general code analysis
- * Falls back to mock responses if @vscode/copilot-api is not available
  */
 
 import { CAPIClient, RequestType, type IExtensionInformation } from '@vscode/copilot-api';
