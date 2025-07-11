@@ -35,7 +35,7 @@ Commands:
   analyze [prompt]           Analyze workspace (uses input/prompt.txt if no prompt given)
   
 Options:
-  --workspace <path>         Set workspace directory (default: current directory)
+  --workspace <path>         Set workspace directory (default: /app/input in Docker, ./input locally)
   --debug                    Enable debug mode with verbose output
   --copilot-key <key>        GitHub Copilot API key (or use COPILOT_API_KEY env var)
   --github-token <token>     GitHub token to fetch Copilot access (or use GITHUB_TOKEN env var)
@@ -99,7 +99,8 @@ async function runAnalysis(prompt: string, options: MVPCLIOptions): Promise<void
 	console.log('🚀 Starting MVP Code Analysis...\n');
 
 	// Setup configuration
-	const workspacePath = path.resolve(options.workspace || process.cwd());
+	const defaultWorkspace = process.env.DATA_DIR ? '/app/input' : './input';
+	const workspacePath = path.resolve(options.workspace || defaultWorkspace);
 	const config = {
 		...defaultMVPConfig,
 		workspacePath,

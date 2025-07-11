@@ -30,6 +30,61 @@ npm start
 npm run dev
 ```
 
+## Docker Usage
+
+Build and run the application in a Docker container:
+
+```bash
+# Build the Docker image
+docker build -t copilot-minimal-cli:latest .
+
+# Rebuild without cache (removes old image and builds fresh)
+docker rmi copilot-minimal-cli:latest 2>/dev/null || true && docker build --no-cache -t copilot-minimal-cli:latest .
+
+# Clean up dangling images after rebuild
+docker image prune -f
+
+# Run with persistent data storage
+docker run -d --name copilot-analyzer \
+    -v ~/.copilot-logs:/app/logs \
+    -v $(pwd)/input:/app/input \
+    --restart unless-stopped \
+    copilot-minimal-cli:latest
+
+# # Run analysis with custom workspace (mount your workspace)
+# docker run -d --name copilot-analyzer \
+#     -v ~/.copilot-logs:/app/logs \
+#     -v /path/to/your/workspace:/workspace \
+#     --restart unless-stopped \
+#     copilot-minimal-cli
+
+# Execute analysis commands in running container
+docker exec -it copilot-analyzer npm run analyze  # uses /app/input/ by default
+docker exec -it copilot-analyzer npm run analyze -- --workspace /workspace
+docker exec -it copilot-analyzer node /app/dist/cli.js analyze --workspace /workspace
+
+# Run interactively for development
+docker run -it --rm \
+    -v ~/.copilot-logs:/app/logs \
+    -v $(pwd)/.env:/app/.env:ro \
+    -v $(pwd)/input:/app/input \
+    -v /path/to/workspace:/workspace \
+    copilot-minimal-cli sh
+
+# Check logs
+docker logs copilot-analyzer
+
+# Stop and remove container
+docker stop copilot-analyzer && docker rm copilot-analyzer
+```
+
+**Volume Mappings:**
+- `~/.copilot-data:/app/data` - Persistent storage for tokens and cache
+- `~/.copilot-logs:/app/logs` - Analysis logs and outputs
+- `.env:/app/.env:ro` - Environment variables (read-only)
+- `input:/app/input` - Live-reload prompts and configuration (optional)
+- `/path/to/workspace:/workspace` - Mount your target workspace for analysis
+
 ## Configuration
 
 - `input/prompt.txt` - Analysis request

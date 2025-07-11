@@ -9,10 +9,7 @@
     "build": "tsc",
     "start": "tsx cli.ts analyze",
     "analyze": "tsx cli.ts analyze",
-    "dev": "tsx cli.ts analyze --debug",
-    "clean": "rimraf dist",
-    "test": "tsx cli.ts analyze --workspace ../",
-    "example": "tsx example.ts"
+    "test": "tsx cli.ts analyze --workspace ../"
   },
   "keywords": [
     "ai",
