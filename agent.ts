@@ -236,7 +236,7 @@ export class MVPStandaloneAgent {
             if (await this.fileSystem.exists(systemPromptPath)) {
                 systemPrompt = await this.fileSystem.readFile(systemPromptPath);
                 systemPrompt = systemPrompt.trim();
-                console.log(`📄 Using system prompt from input/system.txt`);
+                console.log(`📄 Using system prompt from input/system.txt ${systemPrompt.substring(0, 50)}...`);
             } else {
                 console.log(`⚠️  input/system.txt not found, using fallback system prompt`);
             }
@@ -245,14 +245,14 @@ export class MVPStandaloneAgent {
         }
 
         // Read prompt from input/prompt.txt if not provided
-        let promptToUse = customPrompt;
+        let promptToUse = await this.readFallbackPrompt();
         if (!promptToUse) {
             try {
                 const promptPath = path.join(process.cwd(), 'input', 'prompt.txt');
                 if (await this.fileSystem.exists(promptPath)) {
                     promptToUse = await this.fileSystem.readFile(promptPath);
                     promptToUse = promptToUse.trim();
-                    console.log(`📄 Using prompt from input/prompt.txt: ${promptToUse.substring(0, 100)}...`);
+                    console.log(`📄 Using prompt from input/prompt.txt: ${promptToUse.substring(0, 50)}...`);
                 } else {
                     promptToUse = await this.readFallbackPrompt();
                     console.log(`⚠️  input/prompt.txt not found, using fallback prompt`);
@@ -261,11 +261,6 @@ export class MVPStandaloneAgent {
                 promptToUse = await this.readFallbackPrompt();
                 console.log(`⚠️  Error reading prompt file, using fallback: ${error}`);
             }
-        }
-
-        // Ensure promptToUse is never undefined
-        if (!promptToUse) {
-            promptToUse = await this.readFallbackPrompt();
         }
 
         console.log(`\n🔍 Analyzing workspace: ${promptToUse}`);

@@ -37,21 +37,15 @@ Commands:
 Options:
   --workspace <path>         Set workspace directory (default: /app/input in Docker, ./input locally)
   --debug                    Enable debug mode with verbose output
-  --copilot-key <key>        GitHub Copilot API key (or use COPILOT_API_KEY env var)
-  --github-token <token>     GitHub token to fetch Copilot access (or use GITHUB_TOKEN env var)
   --max-iterations <n>       Maximum analysis iterations (default: 10)
 
 Examples:
-  npx ts-node cli.ts analyze
-  npx ts-node cli.ts analyze "count lines of code in this project"
-  npx ts-node cli.ts analyze "find potential security risks"
-  npx ts-node cli.ts analyze --workspace ./my-project --debug
+  npm run analyze
+  npm run analyze -- --workspace ~/some/folder/  --max-iterations 2 --debug
 
-The analyzer will read the prompt from input/prompt.txt if no prompt is provided.
+The analyzer will read the prompt from input/prompt.txt 
 You can put any analysis request in that file, such as:
 - "analyze business entities in this code"
-- "count lines of code and provide statistics"
-- "find potential security risks and vulnerabilities"
 - "analyze code quality and complexity"
 
 Environment Variables:
