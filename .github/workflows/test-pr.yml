@@ -85,14 +85,31 @@ jobs:
           const statusIcon = success ? '✅' : '❌';
           const statusText = success ? 'PASSED' : 'FAILED';
           
+          // Extract test summary from output
+          let testSummary = 'Test summary not available';
+          const lines = testOutput.split('\n');
+          const summaryLines = lines.filter(line => 
+            line.includes('Test Files') || 
+            line.includes('Tests') || 
+            line.includes('Duration')
+          ).map(line => line.replace(/\u001b\[[0-9;]*m/g, '')); // Remove ANSI colors
+          
+          if (summaryLines.length > 0) {
+            testSummary = summaryLines.join('\n');
+          }
+          
           const comment = `## ${statusIcon} Test Results - ${statusText}
           
           **Branch:** \`${{ github.head_ref || github.ref_name }}\`
           **Commit:** \`${{ github.sha }}\`
           
-          ### Test Output
+          ### Test Summary
+          \`\`\`
+          ${testSummary}
+          \`\`\`
+          
           <details>
-          <summary>Click to view test details</summary>
+          <summary>Click to view full test output</summary>
           
           \`\`\`
           ${testOutput}
