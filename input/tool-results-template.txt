@@ -1,5 +1,0 @@
-Tool execution results:
-
-{{results}}
-
-Continue your analysis based on these results. If you have enough information, provide a comprehensive summary of your findings.

@@ -11,8 +11,8 @@
 
 import * as dotenv from 'dotenv';
 import * as path from 'path';
-import { MVPStandaloneAgent, defaultMVPConfig } from './agent';
-import { getToken } from './auth';
+import { MVPStandaloneAgent, defaultMVPConfig} from './agent';
+import { getToken } from './services';
 
 // Load environment variables
 dotenv.config();
@@ -20,8 +20,6 @@ dotenv.config();
 interface MVPCLIOptions {
 	workspace?: string;
 	debug?: boolean;
-	copilotApiKey?: string;
-	githubToken?: string;
 	maxIterations?: number;
 }
 
@@ -29,10 +27,10 @@ function printUsage() {
 	console.log(`
 🤖 MVP Code Analyzer
 
-Usage: npx ts-node cli.ts [command] [options]
+Usage: tsx src/main.ts [command] [options]
 
 Commands:
-  analyze [prompt]           Analyze workspace (uses input/prompt.txt if no prompt given)
+  analyze                    Analyze workspace
   
 Options:
   --workspace <path>         Set workspace directory (default: /app/input in Docker, ./input locally)
@@ -40,13 +38,10 @@ Options:
   --max-iterations <n>       Maximum analysis iterations (default: 10)
 
 Examples:
-  npm run analyze
-  npm run analyze -- --workspace ~/some/folder/  --max-iterations 2 --debug
+  npm run start
+  npm run start -- --workspace ~/some/folder/  --max-iterations 2 --debug
 
-The analyzer will read the prompt from input/prompt.txt 
-You can put any analysis request in that file, such as:
-- "analyze business entities in this code"
-- "analyze code quality and complexity"
+The analyzer will read the prompt from prompt/prompt.txt 
 
 Environment Variables:
   GITHUB_TOKEN              GitHub token for Copilot API access
@@ -100,20 +95,20 @@ async function runAnalysis(prompt: string, options: MVPCLIOptions): Promise<void
 		workspacePath,
 		debugMode: options.debug || false,
 		maxIterations: options.maxIterations || 10,
-		copilotApiKey: options.copilotApiKey || process.env.COPILOT_API_KEY,
-		githubToken: options.githubToken || process.env.GITHUB_TOKEN
+		githubToken: process.env.GITHUB_TOKEN
 	};
 
 	// Validate API access
-	if (!config.copilotApiKey && !config.githubToken) {
-		console.error('❌ GitHub token or Copilot API key is required for API access');
+	if (!process.env.GITHUB_TOKEN) {
+		console.error('❌ GitHub token or is required for Copilot API access');
 		await getToken();
 		return;
 	}
 
 	try {
-		// Initialize the MVP agent
-		const agent = new MVPStandaloneAgent(workspacePath, config);
+		// Initialize the MVP agent with updated config
+		const agentConfig = { ...config, workspacePath };
+		const agent = new MVPStandaloneAgent(agentConfig);
 		await agent.initialize();
 
 		console.log('✅ Agent initialized successfully!\n');
@@ -166,7 +161,7 @@ async function main(): Promise<void> {
 
 	switch (command) {
 		case 'analyze':
-			await runAnalysis(prompt || "", options);
+			await runAnalysis(prompt || '', options);
 			break;
 		default:
 			console.error(`❌ Unknown command: ${command}`);
