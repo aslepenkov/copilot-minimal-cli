@@ -32,11 +32,13 @@ export class MVPStandaloneAgent {
     }
 
     private async initializeCopilotAPI(): Promise<void> {
+        const copilotConfig = { debugMode: this.config.debugMode };
+        
         if (this.config.githubToken) {
-            this.copilotAPI = await MVPCopilotAPI.createWithGitHubToken(this.config.githubToken);
+            this.copilotAPI = await MVPCopilotAPI.createWithGitHubToken(this.config.githubToken, copilotConfig);
             console.log(`🔗 Copilot API initialized via GitHub token`);
         } else if (this.config.copilotApiKey) {
-            this.copilotAPI = new MVPCopilotAPI(this.config.copilotApiKey);
+            this.copilotAPI = new MVPCopilotAPI(this.config.copilotApiKey, copilotConfig);
             console.log(`🔗 Copilot API initialized via API key`);
         }
     }
@@ -49,13 +51,13 @@ export class MVPStandaloneAgent {
 
     private async initializeTools(): Promise<void> {
         this.toolRegistry.initializeReadOnlyTools(this.fileSystem);
-        console.log(`🔧 Initialized ${this.toolRegistry.size()} readonly tools`);
+        const toolNames = this.toolRegistry.getAll().map(tool => tool.name).join(', ');
+        console.log(`🔧 Initialized ${this.toolRegistry.size()} tools: ${toolNames}`);
     }
 
     private async logInitializationComplete(): Promise<void> {
         const workspaceStructure = await this.fileSystem.getWorkspaceStructure();
         console.log(`📊 Workspace structure loaded (${workspaceStructure.length} characters)`);
-        console.log(`🔧 Agent initialized with ${this.toolRegistry.size()} readonly tools`);
     }
 
     async analyzeWorkspace(customPrompt?: string): Promise<AgentResult> {
@@ -137,8 +139,7 @@ export class MVPStandaloneAgent {
             const extractedToolCalls = this.extractToolCalls(currentResponse);
 
             if (extractedToolCalls.length === 0) {
-                console.log(`📊 Analysis complete - no more tool calls needed`);
-
+                console.log(`📊 Analysis complete - no more tool calls needed {TODO STOP HERE EXIT LOOP}`);
                 context.analysisData = currentResponse;
                 // break;
             }

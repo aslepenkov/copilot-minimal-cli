@@ -14,20 +14,26 @@ interface CopilotAPIResponse {
     }>;
 }
 
+interface CopilotConfig {
+    debugMode: boolean;
+}
+
 export class MVPCopilotAPI {
     private client: CAPIClient | null = null;
     private hasCopilotAPI: boolean = false;
     private copilotToken: any = null;
     private conversationHistory: Array<{ role: string; content: string }> = [];
     private maxHistoryLength: number = 100; // Limit conversation history
+    private config: CopilotConfig;
 
-    constructor(apiKey: string) {
+    constructor(apiKey: string, config: CopilotConfig) {
+        this.config = config;
         this.initializeCopilotAPI(apiKey);
     }
 
     // Static factory method to create instance with GitHub token
-    static async createWithGitHubToken(githubToken: string): Promise<MVPCopilotAPI> {
-        const instance = new MVPCopilotAPI('');
+    static async createWithGitHubToken(githubToken: string, config: CopilotConfig): Promise<MVPCopilotAPI> {
+        const instance = new MVPCopilotAPI('', config);
         await instance.initializeWithGitHubToken(githubToken);
         return instance;
     }
@@ -78,7 +84,9 @@ export class MVPCopilotAPI {
         }, { type: RequestType.CopilotToken });
 
         const text = await response.text();
-        console.log('📥 Copilot token response:', text);
+        if (this.config.debugMode) {
+            console.log('📥 Copilot token response:', text);
+        }
 
         try {
             const tokenData = JSON.parse(text);
@@ -174,8 +182,7 @@ export class MVPCopilotAPI {
                 if (maintainContext && this.conversationHistory.length > 0) {
                     messages.push(...this.conversationHistory);
                 }
-                console.log('📜 Current conversation history:', JSON.stringify(messages, null, 2));
-
+       
                 // Add current user prompt
                 messages.push({ role: 'user', content: prompt });
 
@@ -185,7 +192,11 @@ export class MVPCopilotAPI {
                     temperature: 0.7,
                     max_tokens: 4000,
                 };
-                console.log('📤 Request body:', JSON.stringify(requestBody, null, 2));
+
+                // Only log request body if debug is enabled in config
+                if (this.config.debugMode) {
+                    console.log('📤 Request body:', JSON.stringify(requestBody, null, 2));
+                }
 
                 const response = await this.client.makeRequest<Response>({
                     method: 'POST',
@@ -211,7 +222,9 @@ export class MVPCopilotAPI {
 
                     // Parse successful response
                     const responseText = await response.text();
-                    console.debug('📥 Response text:', responseText);
+                    if (this.config.debugMode) {
+                        console.debug('📥 Response text:', responseText);
+                    }
                     const parsedResponse = JSON.parse(responseText);
 
                     if (parsedResponse.choices && parsedResponse.choices.length > 0) {
