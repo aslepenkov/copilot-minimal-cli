@@ -19,7 +19,7 @@ export class MVPCopilotAPI {
     private hasCopilotAPI: boolean = false;
     private copilotToken: any = null;
     private conversationHistory: Array<{ role: string; content: string }> = [];
-    private maxHistoryLength: number = 10; // Limit conversation history
+    private maxHistoryLength: number = 100; // Limit conversation history
 
     constructor(apiKey: string) {
         this.initializeCopilotAPI(apiKey);
@@ -127,7 +127,7 @@ export class MVPCopilotAPI {
         this.client = null;
         this.hasCopilotAPI = false;
         this.copilotToken = null;
-        
+
         if (githubToken) {
             await this.initializeWithGitHubToken(githubToken);
         }
@@ -158,13 +158,13 @@ export class MVPCopilotAPI {
         }
     }
 
-    async callAPI(prompt: string, systemPrompt?: string, maintainContext: boolean = false): Promise<string> {
+    async callAPI(prompt: string, systemPrompt?: string, maintainContext: boolean = true): Promise<string> {
         const actualSystemPrompt = systemPrompt || "You are an AI assistant specializing in code analysis.";
 
         if (this.hasCopilotAPI && this.client) {
             try {
                 console.log('🔍 Making Copilot API request...');
-                
+
                 // Build messages array
                 let messages: Array<{ role: string; content: string }> = [
                     { role: 'system', content: actualSystemPrompt }
@@ -174,6 +174,7 @@ export class MVPCopilotAPI {
                 if (maintainContext && this.conversationHistory.length > 0) {
                     messages.push(...this.conversationHistory);
                 }
+                console.log('📜 Current conversation history:', JSON.stringify(messages, null, 2));
 
                 // Add current user prompt
                 messages.push({ role: 'user', content: prompt });
@@ -215,14 +216,14 @@ export class MVPCopilotAPI {
 
                     if (parsedResponse.choices && parsedResponse.choices.length > 0) {
                         const responseContent = parsedResponse.choices[0].message.content;
-                        
+
                         // Store conversation history if maintaining context
                         if (maintainContext) {
                             this.conversationHistory.push({ role: 'user', content: prompt });
                             this.conversationHistory.push({ role: 'assistant', content: responseContent });
                             this.trimHistory();
                         }
-                        
+
                         return responseContent;
                     }
                 }
@@ -232,38 +233,38 @@ export class MVPCopilotAPI {
                     // Handle different response formats
                     if ('choices' in response && Array.isArray(response.choices) && response.choices.length > 0) {
                         const responseContent = response.choices[0].message.content;
-                        
+
                         // Store conversation history if maintaining context
                         if (maintainContext) {
                             this.conversationHistory.push({ role: 'user', content: prompt });
                             this.conversationHistory.push({ role: 'assistant', content: responseContent });
                             this.trimHistory();
                         }
-                        
+
                         return responseContent;
                     }
                     if ('content' in response && typeof response.content === 'string') {
                         const responseContent = response.content;
-                        
+
                         // Store conversation history if maintaining context
                         if (maintainContext) {
                             this.conversationHistory.push({ role: 'user', content: prompt });
                             this.conversationHistory.push({ role: 'assistant', content: responseContent });
                             this.trimHistory();
                         }
-                        
+
                         return responseContent;
                     }
                     if ('text' in response && typeof response.text === 'string') {
                         const responseContent = response.text;
-                        
+
                         // Store conversation history if maintaining context
                         if (maintainContext) {
                             this.conversationHistory.push({ role: 'user', content: prompt });
                             this.conversationHistory.push({ role: 'assistant', content: responseContent });
                             this.trimHistory();
                         }
-                        
+
                         return responseContent;
                     }
                 }

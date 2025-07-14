@@ -138,13 +138,17 @@ export class MVPStandaloneAgent {
 
             if (extractedToolCalls.length === 0) {
                 console.log(`📊 Analysis complete - no more tool calls needed`);
-                break;
+
+                context.analysisData = currentResponse;
+                // break;
             }
 
             await this.executeToolCalls(extractedToolCalls, context.toolCalls);
             
             const toolResultsPrompt = await this.buildToolResultsPrompt(extractedToolCalls);
             currentResponse = await this.callCopilotAPI(toolResultsPrompt, systemPrompt);
+
+             
         }
 
         const duration = Date.now() - context.startTime;
