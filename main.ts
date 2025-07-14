@@ -12,7 +12,7 @@
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 import { MVPStandaloneAgent, defaultMVPConfig, type MVPAgentConfig } from './agent';
-import { getToken } from './auth';
+import { getToken } from './services';
 
 // Load environment variables
 dotenv.config();

@@ -11,3 +11,7 @@ export { MVPCopilotAPI } from './copilot-api';
 export { ReadOnlyFileSystem } from './filesystem';
 export type { ILogger } from './logging';
 export { FileLogger } from './logging';
+
+// Authentication Services
+export type { IAuthService, AuthConfig } from './auth';
+export { GitHubAuthService, authService, getToken } from './auth';

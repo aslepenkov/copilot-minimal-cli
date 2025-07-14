@@ -88,7 +88,7 @@ The MVP Code Analyzer follows a modular, clean architecture with clear separatio
 │                                                                 │
 │  ┌─────────────┐    ┌──────────────┐    ┌─────────────────────┐ │
 │  │    CLI      │───▶│    Agent     │───▶│   Copilot API      │ │
-│  │  (cli.ts)   │    │  (agent.ts)  │    │ (copilot-api.ts)    │ │
+│  │  (main.ts)  │    │  (agent/)    │    │ (services/)         │ │
 │  └─────────────┘    └──────┬───────┘    └─────────────────────┘ │
 │                             │                                   │
 │                             ▼                                   │
@@ -103,7 +103,7 @@ The MVP Code Analyzer follows a modular, clean architecture with clear separatio
 
 ### Core Components
 
-#### 1. CLI Layer (`cli.ts`)
+#### 1. CLI Layer (`main.ts`)
 ```
 ┌─────────────────────────────────────────┐
 │              CLI Interface              │
@@ -121,7 +121,7 @@ The MVP Code Analyzer follows a modular, clean architecture with clear separatio
 └─────────────────────────────────────────┘
 ```
 
-#### 2. Agent Core (`agent.ts`)
+#### 2. Agent Core (`agent/`)
 ```
 ┌─────────────────────────────────────────┐
 │            MVPStandaloneAgent           │
@@ -208,11 +208,22 @@ The MVP Code Analyzer follows a modular, clean architecture with clear separatio
 #### 5. File Structure
 ```
 copilot-minimal-cli/
-├── cli.ts                 # Entry point, argument parsing
-├── agent.ts               # Core analysis engine
-├── auth.ts                # GitHub token management
-├── copilot-api.ts         # Copilot API wrapper
-├── tools/                 # Modular tool system
+├── main.ts                # Entry point, argument parsing
+├── agent/                 # Domain logic layer
+│   ├── index.ts           # Agent exports
+│   ├── agent.ts           # Core analysis engine
+│   └── interfaces.ts      # Agent contracts
+├── services/              # Business services layer
+│   ├── index.ts           # Services exports
+│   ├── copilot-api.ts     # AI/ML service
+│   ├── auth.ts            # Authentication service
+│   ├── filesystem/        # File system service
+│   │   ├── index.ts
+│   │   └── read-only-filesystem.ts
+│   └── logging/           # Logging service
+│       ├── index.ts
+│       └── file-logger.ts
+├── tools/                 # Infrastructure layer
 │   ├── index.ts           # Central exports
 │   ├── interfaces.ts      # Core interfaces
 │   ├── registry.ts        # Tool management

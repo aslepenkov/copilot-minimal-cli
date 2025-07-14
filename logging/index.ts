@@ -2,5 +2,4 @@
  * Logging Module Exports
  */
 
-export type { ILogger, LogEntry } from './file-logger';
-export { FileLogger } from './file-logger';
+export type { ILogger, LogEntry, FileLogger } from './file-logger';
