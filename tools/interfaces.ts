@@ -2,7 +2,6 @@
  * Core interfaces for tools
  */
 
-// Tool interface
 export interface ITool {
     name: string;
     description: string;
@@ -10,7 +9,6 @@ export interface ITool {
     execute(args: any): Promise<any>;
 }
 
-// File System interface for tools
 export interface IFileSystem {
     readFile(filePath: string): Promise<string>;
     listDirectory(dirPath: string): Promise<string[]>;

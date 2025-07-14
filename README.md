@@ -35,21 +35,21 @@ docker build -t copilot-minimal-cli:latest .
 docker image prune -f
 
 # Run with persistent data storage (container manages its own .env)
-docker run -d --name copilot-analyzer \
+docker run -d --name copilot-minimal-cli \
     -v $(pwd)/logs:/app/logs \
     -v $(pwd)/input:/app/input \
     --restart unless-stopped \
     copilot-minimal-cli:latest
 
 # Execute analysis commands in running container
-docker exec -it copilot-analyzer npm run analyze  # uses /app/input/ by default
-docker exec -it copilot-analyzer npm run analyze -- --workspace ./input/  --max-iterations 2 --debug
+docker exec -it copilot-minimal-cli npm run analyze  # uses /app/input/ by default
+docker exec -it copilot-minimal-cli npm run analyze -- --workspace ./input/  --max-iterations 2 --debug
 
 # Get shell access to running container
-docker exec -it copilot-analyzer sh
+docker exec -it copilot-minimal-cli  sh
 
 # Stop and remove container
-docker stop copilot-analyzer && docker rm copilot-analyzer
+docker stop copilot-minimal-cli  && docker rm copilot-minimal-cli 
 ```
 
 **Volume Mappings:**

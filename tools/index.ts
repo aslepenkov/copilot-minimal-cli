@@ -4,8 +4,8 @@
  * Central export point for all tool-related functionality
  */
 
-// Core interfaces
-export { ITool, IFileSystem } from './interfaces';
+// Re-export interfaces
+export type { ITool, IFileSystem } from './interfaces';
 
 // Individual tools
 export { ReadFileTool } from './read-file';
