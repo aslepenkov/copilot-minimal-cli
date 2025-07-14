@@ -9,6 +9,8 @@ import { ReadFileTool } from './read-file';
 import { ListDirectoryTool } from './list-directory';
 import { GetWorkspaceStructureTool } from './workspace-structure';
 import { FindCodeFilesTool } from './find-files';
+import { FinishAnalyzeTool } from './finish-analyze';
+import { SaveDocumentTool } from './save-document';
 
 export class ToolRegistry {
     private tools: Map<string, ITool> = new Map();
@@ -34,5 +36,7 @@ export class ToolRegistry {
         this.register(new ListDirectoryTool(fileSystem));
         this.register(new GetWorkspaceStructureTool(fileSystem));
         this.register(new FindCodeFilesTool(fileSystem));
+        this.register(new FinishAnalyzeTool());
+        this.register(new SaveDocumentTool());
     }
 }

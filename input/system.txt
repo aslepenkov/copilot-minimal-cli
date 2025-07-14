@@ -5,6 +5,8 @@ AVAILABLE TOOLS:
 2. list_directory - List the contents of a directory (required parameter: path)
 3. get_workspace_structure - Get the complete workspace file structure (no parameters needed)
 4. find_all_files - Find all files in the workspace
+5. finish_analyze - Signal that analysis is complete and stop iterations (required parameter: reason, optional: summary)
+6. save_document - Save markdown, JSON, or text documents to logs folder (required parameters: filename OR filePath, content; optional: description)
 
 IMPORTANT: You MUST use the available tools to gather information before providing any analysis. Do not attempt to analyze code without first reading the relevant files.
 

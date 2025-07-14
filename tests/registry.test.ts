@@ -70,13 +70,15 @@ describe('ToolRegistry', () => {
     it('should initialize readonly tools', () => {
         registry.initializeReadOnlyTools(mockFS);
         
-        expect(registry.size()).toBe(4);
+        expect(registry.size()).toBe(6);
         
         // Check all expected tools are registered
         expect(registry.get('read_file')).toBeDefined();
         expect(registry.get('list_directory')).toBeDefined();
         expect(registry.get('get_workspace_structure')).toBeDefined();
         expect(registry.get('find_all_files')).toBeDefined();
+        expect(registry.get('finish_analyze')).toBeDefined();
+        expect(registry.get('save_document')).toBeDefined();
         
         // Verify tools are properly instantiated
         const readTool = registry.get('read_file');
