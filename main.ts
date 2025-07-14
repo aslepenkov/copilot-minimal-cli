@@ -11,8 +11,8 @@
 
 import * as dotenv from 'dotenv';
 import * as path from 'path';
-import { MVPStandaloneAgent, defaultMVPConfig } from './agent';
-import { getToken } from './auth';
+import { MVPStandaloneAgent, defaultMVPConfig, type MVPAgentConfig } from './agent';
+import { getToken } from './services';
 
 // Load environment variables
 dotenv.config();
@@ -112,8 +112,9 @@ async function runAnalysis(prompt: string, options: MVPCLIOptions): Promise<void
 	}
 
 	try {
-		// Initialize the MVP agent
-		const agent = new MVPStandaloneAgent(workspacePath, config);
+		// Initialize the MVP agent with updated config
+		const agentConfig = { ...config, workspacePath };
+		const agent = new MVPStandaloneAgent(agentConfig);
 		await agent.initialize();
 
 		console.log('✅ Agent initialized successfully!\n');
