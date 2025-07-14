@@ -1,12 +1,5 @@
 /**
  * MVP Standalone Agent - General Purpose Code Analysis
- *
- * Clean architecture following SOLID principles:
- * - Single Responsibility: Agent orchestrates analysis workflow
- * - Open/Closed: Extensible through dependency injection
- * - Liskov Substitution: Interface-based design
- * - Interface Segregation: Focused interfaces
- * - Dependency Inversion: Depends on abstractions
  */
 
 import * as path from 'path';

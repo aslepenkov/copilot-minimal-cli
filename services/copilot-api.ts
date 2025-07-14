@@ -18,6 +18,8 @@ export class MVPCopilotAPI {
     private client: CAPIClient | null = null;
     private hasCopilotAPI: boolean = false;
     private copilotToken: any = null;
+    private conversationHistory: Array<{ role: string; content: string }> = [];
+    private maxHistoryLength: number = 10; // Limit conversation history
 
     constructor(apiKey: string) {
         this.initializeCopilotAPI(apiKey);
@@ -109,19 +111,76 @@ export class MVPCopilotAPI {
         }
     }
 
-    async callAPI(prompt: string, systemPrompt?: string): Promise<string> {
-        const defaultSystemPrompt = "You are an AI assistant specializing in code analysis.";
-        const actualSystemPrompt = systemPrompt || defaultSystemPrompt;
+    /**
+     * Clear conversation history to start fresh context
+     */
+    clearContext(): void {
+        this.conversationHistory = [];
+        console.log('🧹 Conversation context cleared');
+    }
+
+    /**
+     * Reset the entire client (clears context and reinitializes)
+     */
+    async resetClient(githubToken?: string): Promise<void> {
+        this.clearContext();
+        this.client = null;
+        this.hasCopilotAPI = false;
+        this.copilotToken = null;
+        
+        if (githubToken) {
+            await this.initializeWithGitHubToken(githubToken);
+        }
+        console.log('🔄 Client completely reset');
+    }
+
+    /**
+     * Get current conversation history length
+     */
+    getContextLength(): number {
+        return this.conversationHistory.length;
+    }
+
+    /**
+     * Set maximum conversation history length
+     */
+    setMaxHistoryLength(maxLength: number): void {
+        this.maxHistoryLength = maxLength;
+        this.trimHistory();
+    }
+
+    /**
+     * Trim conversation history to max length
+     */
+    private trimHistory(): void {
+        if (this.conversationHistory.length > this.maxHistoryLength) {
+            this.conversationHistory = this.conversationHistory.slice(-this.maxHistoryLength);
+        }
+    }
+
+    async callAPI(prompt: string, systemPrompt?: string, maintainContext: boolean = false): Promise<string> {
+        const actualSystemPrompt = systemPrompt || "You are an AI assistant specializing in code analysis.";
 
         if (this.hasCopilotAPI && this.client) {
             try {
                 console.log('🔍 Making Copilot API request...');
+                
+                // Build messages array
+                let messages: Array<{ role: string; content: string }> = [
+                    { role: 'system', content: actualSystemPrompt }
+                ];
+
+                // Add conversation history if maintaining context
+                if (maintainContext && this.conversationHistory.length > 0) {
+                    messages.push(...this.conversationHistory);
+                }
+
+                // Add current user prompt
+                messages.push({ role: 'user', content: prompt });
+
                 const requestBody = {
                     model: 'gpt-4',
-                    messages: [
-                        { role: 'system', content: actualSystemPrompt },
-                        { role: 'user', content: prompt }
-                    ],
+                    messages: messages,
                     temperature: 0.7,
                     max_tokens: 4000,
                 };
@@ -155,7 +214,16 @@ export class MVPCopilotAPI {
                     const parsedResponse = JSON.parse(responseText);
 
                     if (parsedResponse.choices && parsedResponse.choices.length > 0) {
-                        return parsedResponse.choices[0].message.content;
+                        const responseContent = parsedResponse.choices[0].message.content;
+                        
+                        // Store conversation history if maintaining context
+                        if (maintainContext) {
+                            this.conversationHistory.push({ role: 'user', content: prompt });
+                            this.conversationHistory.push({ role: 'assistant', content: responseContent });
+                            this.trimHistory();
+                        }
+                        
+                        return responseContent;
                     }
                 }
 
@@ -163,13 +231,40 @@ export class MVPCopilotAPI {
                 if (response && typeof response === 'object') {
                     // Handle different response formats
                     if ('choices' in response && Array.isArray(response.choices) && response.choices.length > 0) {
-                        return response.choices[0].message.content;
+                        const responseContent = response.choices[0].message.content;
+                        
+                        // Store conversation history if maintaining context
+                        if (maintainContext) {
+                            this.conversationHistory.push({ role: 'user', content: prompt });
+                            this.conversationHistory.push({ role: 'assistant', content: responseContent });
+                            this.trimHistory();
+                        }
+                        
+                        return responseContent;
                     }
                     if ('content' in response && typeof response.content === 'string') {
-                        return response.content;
+                        const responseContent = response.content;
+                        
+                        // Store conversation history if maintaining context
+                        if (maintainContext) {
+                            this.conversationHistory.push({ role: 'user', content: prompt });
+                            this.conversationHistory.push({ role: 'assistant', content: responseContent });
+                            this.trimHistory();
+                        }
+                        
+                        return responseContent;
                     }
                     if ('text' in response && typeof response.text === 'string') {
-                        return response.text;
+                        const responseContent = response.text;
+                        
+                        // Store conversation history if maintaining context
+                        if (maintainContext) {
+                            this.conversationHistory.push({ role: 'user', content: prompt });
+                            this.conversationHistory.push({ role: 'assistant', content: responseContent });
+                            this.trimHistory();
+                        }
+                        
+                        return responseContent;
                     }
                 }
 
