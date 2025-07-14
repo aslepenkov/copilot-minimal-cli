@@ -11,7 +11,8 @@
     "analyze": "tsx cli.ts analyze",
     "test": "vitest run --reporter=verbose",
     "test:watch": "vitest",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [
     "ai",
