@@ -104,6 +104,7 @@ jobs:
           
           try {
             let prNumber = context.issue.number;
+            console.log(`PR number from context: ${prNumber}`);
             
             // If no PR number from context, try to find PR for current branch
             if (!prNumber && github.event_name === 'push') {
