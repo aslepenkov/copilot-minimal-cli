@@ -361,7 +361,7 @@ export class MVPStandaloneAgent {
         // Gather data for template variables
         const workspaceStructure = await this.fileSystem.getWorkspaceStructure();
         const toolDescriptions = this.toolRegistry.getAll()
-            .map(tool => `${tool.name}: ${tool.description}`)
+            .map((tool: ITool) => `${tool.name}: ${tool.description}`)
             .join('\n');
 
         // Replace template variables
