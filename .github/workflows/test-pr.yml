@@ -104,13 +104,16 @@ jobs:
           
           try {
             let prNumber = context.issue.number;
+            console.log(`Event name: ${github.event_name}`);
             console.log(`PR number from context: ${prNumber}`);
+            console.log(`Repo: ${context.repo.owner}/${context.repo.repo}`);
+            console.log(`Actor: ${context.actor}`);
             
             // If no PR number from context, try to find PR for current branch
-            if (!prNumber && github.event_name === 'push') {
-              console.log('Push event detected, searching for PR associated with branch');
+            if (!prNumber) {
+              console.log('No PR context, searching for PR associated with branch');
               const branch = '${{ github.ref_name }}';
-              console.log(`Searching for PRs with head branch: ${branch}`);
+              console.log(`Current branch: ${branch}`);
               
               // Try different head formats since it could be a fork
               const headFormats = [
@@ -129,29 +132,39 @@ jobs:
                     state: 'open'
                   });
                   
+                  console.log(`Found ${pulls.length} PRs for head: ${head}`);
                   if (pulls.length > 0) {
                     prNumber = pulls[0].number;
                     console.log(`Found PR #${prNumber} for head ${head}`);
                     break;
                   }
                 } catch (err) {
-                  console.log(`No PR found for head format: ${head}`);
+                  console.log(`Error searching for head format ${head}:`, err.message);
                 }
               }
               
               // If still no PR found, try searching by branch name only
               if (!prNumber) {
                 console.log('Searching all open PRs to match by branch name');
-                const { data: allPulls } = await github.rest.pulls.list({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  state: 'open'
-                });
-                
-                const matchingPR = allPulls.find(pr => pr.head.ref === branch);
-                if (matchingPR) {
-                  prNumber = matchingPR.number;
-                  console.log(`Found PR #${prNumber} by matching branch name ${branch}`);
+                try {
+                  const { data: allPulls } = await github.rest.pulls.list({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    state: 'open'
+                  });
+                  
+                  console.log(`Found ${allPulls.length} total open PRs`);
+                  allPulls.forEach(pr => {
+                    console.log(`PR #${pr.number}: ${pr.head.ref} -> ${pr.base.ref}`);
+                  });
+                  
+                  const matchingPR = allPulls.find(pr => pr.head.ref === branch);
+                  if (matchingPR) {
+                    prNumber = matchingPR.number;
+                    console.log(`Found PR #${prNumber} by matching branch name ${branch}`);
+                  }
+                } catch (err) {
+                  console.log('Error searching all PRs:', err.message);
                 }
               }
               
