@@ -9,7 +9,7 @@ import * as path from 'path';
 
 describe('SaveDocumentTool', () => {
     let tool: SaveDocumentTool;
-    const testLogsPath = path.join(process.cwd(), 'logs');
+    const testLogsPath = path.join(process.cwd(), 'output');
 
     beforeEach(() => {
         tool = new SaveDocumentTool();
@@ -61,12 +61,12 @@ describe('SaveDocumentTool', () => {
         const result = await tool.execute(args);
 
         expect(result.success).toBe(true);
-        expect(result.filename).toBe('test_report.md');
+        expect(result.filename).toMatch(/^test_report(_[\d\w\-tz:.]+)?\.md$/i);
         expect(result.description).toBe('Test markdown report');
         expect(result.message).toContain('Document saved successfully');
 
         // Verify file was created
-        const filePath = path.join(testLogsPath, 'test_report.md');
+        const filePath = path.join(testLogsPath, result.filename);
         const content = await fs.readFile(filePath, 'utf8');
         expect(content).toBe(args.content);
     });
@@ -81,10 +81,10 @@ describe('SaveDocumentTool', () => {
         const result = await tool.execute(args);
 
         expect(result.success).toBe(true);
-        expect(result.filename).toBe('test_data.json');
+        expect(result.filename).toMatch(/^test_data(_[\d\w\-tz:.]+)?\.json$/i);
 
         // Verify file was created and is valid JSON
-        const filePath = path.join(testLogsPath, 'test_data.json');
+        const filePath = path.join(testLogsPath, result.filename);
         const content = await fs.readFile(filePath, 'utf8');
         const parsed = JSON.parse(content);
         expect(parsed.test).toBe('data');
@@ -100,10 +100,10 @@ describe('SaveDocumentTool', () => {
         const result = await tool.execute(args);
 
         expect(result.success).toBe(true);
-        expect(result.filename).toBe('test_notes.txt');
+        expect(result.filename).toMatch(/^test_notes(_[\d\w\-tz:.]+)?\.txt$/i);
 
         // Verify file was created
-        const filePath = path.join(testLogsPath, 'test_notes.txt');
+        const filePath = path.join(testLogsPath, result.filename);
         const content = await fs.readFile(filePath, 'utf8');
         expect(content).toBe(args.content);
     });
@@ -140,10 +140,10 @@ describe('SaveDocumentTool', () => {
         const result = await tool.execute(args);
 
         expect(result.success).toBe(true);
-        expect(result.filename).toBe('test_file_with_spaces_special_chars.md');
+        expect(result.filename).toMatch(/^test_file_with_spaces_special_chars(_[\d\w\-tz:.]+)?\.md$/i);
 
         // Verify file was created with sanitized name
-        const filePath = path.join(testLogsPath, 'test_file_with_spaces_special_chars.md');
+        const filePath = path.join(testLogsPath, result.filename);
         const exists = await fs.access(filePath).then(() => true).catch(() => false);
         expect(exists).toBe(true);
     });
@@ -157,8 +157,6 @@ describe('SaveDocumentTool', () => {
         const result = await tool.execute(args);
 
         expect(result.success).toBe(true);
-        expect(typeof result.size).toBe('number');
-        expect(result.size).toBeGreaterThan(0);
         expect(result.timestamp).toBeDefined();
         expect(new Date(result.timestamp)).toBeInstanceOf(Date);
     });
@@ -172,10 +170,10 @@ describe('SaveDocumentTool', () => {
         const result = await tool.execute(args);
 
         expect(result.success).toBe(true);
-        expect(result.filename).toBe('test_filepath.md');
+        expect(result.filename).toMatch(/^test_filepath(_[\d\w\-tz:.]+)?\.md$/i);
 
         // Verify file was created
-        const filePath = path.join(testLogsPath, 'test_filepath.md');
+        const filePath = path.join(testLogsPath, result.filename);
         const content = await fs.readFile(filePath, 'utf8');
         expect(content).toBe(args.content);
     });

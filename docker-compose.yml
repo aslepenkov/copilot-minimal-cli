@@ -5,6 +5,8 @@ services:
     volumes:
       - ./logs:/app/logs
       - ./input:/app/input
+      - ./prompt:/app/prompt
+      - ./output:/app/output
     restart: unless-stopped
-
+    
     command: ["tail", "-f", "/dev/null"]

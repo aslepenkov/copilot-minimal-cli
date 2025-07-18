@@ -1,9 +1,0 @@
-WORKSPACE CONTEXT:
-Working Directory: {{workspacePath}}
-Workspace Structure:
-{{workspaceStructure}}
-
-AVAILABLE TOOLS:
-{{toolDescriptions}}
-
-ANALYSIS REQUEST: {{request}}

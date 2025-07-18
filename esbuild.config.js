@@ -8,7 +8,7 @@
 import { build } from 'esbuild';
 
 const config = {
-  entryPoints: ['main.ts'],
+  entryPoints: ['src/main.ts'],
   bundle: true,
   platform: 'node',
   target: 'node20',

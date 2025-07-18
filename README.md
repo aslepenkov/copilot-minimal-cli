@@ -59,23 +59,23 @@ The MVP Code Analyzer follows a modular, clean architecture with clear separatio
 ### System Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        MVP Code Analyzer                        │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ┌─────────────┐    ┌──────────────┐    ┌─────────────────────┐ │
-│  │    CLI      │───▶│    Agent     │───▶│   Copilot API      │ │
-│  │  (main.ts)  │    │  (agent/)    │    │ (services/)         │ │
-│  └─────────────┘    └──────┬───────┘    └─────────────────────┘ │
-│                             │                                   │
-│                             ▼                                   │
-│  ┌─────────────┐    ┌──────────────┐    ┌─────────────────────┐ │
-│  │   Input     │    │     Tools    │    │    File System      │ │
-│  │   Files     │    │   Registry   │    │   (ReadOnly)        │ │
-│  │             │    │              │    │                     │ │
-│  └─────────────┘    └──────────────┘    └─────────────────────┘ │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────┐
+│                        MVP Code Analyzer                                  │
+├────────────────────────────────────────────────────────────────────────────┤
+│                                                                            │
+│  ┌──────────────┐   ┌────────────────┐   ┌──────────────────────────────┐  │
+│  │    CLI       │──▶│    Agent       │──▶│   Copilot API Service        │  │
+│  │ (src/main.ts)│   │ (src/agent/)   │   │   (src/services/)            │  │
+│  └──────────────┘   └───────┬────────┘   └───────────────┬──────────────┘  │
+│                              │                            │                 │
+│                              ▼                            ▼                 │
+│  ┌──────────────┐   ┌────────────────┐   ┌──────────────────────────────┐  │
+│  │   Prompts    │   │    Tools       │   │   File System (ReadOnly)     │  │
+│  │ (input/,     │   │  (src/tools/)  │   │   (src/services/filesystem/) │  │
+│  │  prompt/)    │   │                │   │                              │  │
+│  └──────────────┘   └────────────────┘   └──────────────────────────────┘  │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Core Components
@@ -185,37 +185,41 @@ The MVP Code Analyzer follows a modular, clean architecture with clear separatio
 #### 5. File Structure
 ```
 copilot-minimal-cli/
-├── main.ts                # Entry point, argument parsing
-├── agent/                 # Domain logic layer
-│   ├── index.ts           # Agent exports
-│   ├── agent.ts           # Core analysis engine
-│   └── interfaces.ts      # Agent contracts
-├── services/              # Business services layer
-│   ├── index.ts           # Services exports
-│   ├── copilot-api.ts     # AI/ML service
-│   ├── auth.ts            # Authentication service
-│   ├── filesystem/        # File system service
-│   │   ├── index.ts
-│   │   └── read-only-filesystem.ts
-│   └── logging/           # Logging service
-│       ├── index.ts
-│       └── file-logger.ts
-├── tools/                 # Infrastructure layer
-│   ├── index.ts           # Central exports
-│   ├── interfaces.ts      # Core interfaces
-│   ├── registry.ts        # Tool management
-│   ├── read-file.ts       # File reading tool
-│   ├── list-directory.ts  # Directory listing tool
-│   ├── workspace-structure.ts # Structure analysis
-│   └── find-files.ts      # File discovery tool
-├── input/                 # External configuration
-│   ├── prompt.txt         # Analysis request
-│   ├── system.txt         # System instructions
-│   ├── user-prompt-template.txt
-│   └── tool-results-template.txt
-├── logs/                  # Analysis outputs
-│   ├── llm_output_*.jsonl # LLM interactions
-│   └── analysis_*.jsonl   # Analysis results
-└── README.md              # This documentation
+├── src/
+│   ├── main.ts                # Entry point, argument parsing
+│   ├── agent/                 # Domain logic layer
+│   │   ├── index.ts           # Agent exports
+│   │   ├── agent.ts           # Core analysis engine
+│   │   └── interfaces.ts      # Agent contracts
+│   ├── services/              # Business services layer
+│   │   ├── index.ts           # Services exports
+│   │   ├── copilot-api.ts     # AI/ML service
+│   │   ├── auth.ts            # Authentication service
+│   │   ├── filesystem/        # File system service
+│   │   │   ├── index.ts
+│   │   │   └── read-only-filesystem.ts
+│   │   └── logging/           # Logging service
+│   │       ├── index.ts
+│   │       └── file-logger.ts
+│   ├── tools/                 # Infrastructure layer
+│   │   ├── index.ts           # Central exports
+│   │   ├── interfaces.ts      # Core interfaces
+│   │   ├── registry.ts        # Tool management
+│   │   ├── read-file.ts       # File reading tool
+│   │   ├── list-directory.ts  # Directory listing tool
+│   │   ├── workspace-structure.ts # Structure analysis
+│   │   └── find-files.ts      # File discovery tool
+├── prompt/                    # External configuration and templates
+│   ├── prompt.txt             # Analysis request
+│   ├── system.txt             # System instructions
+├── input/                     # Example or sample input workspaces
+│   └── ...
+├── logs/                      # Analysis outputs
+│   ├── llm_output_*.jsonl     # LLM interactions
+│   └── analysis_*.jsonl       # Analysis results
+├── tests/                     # Automated tests
+│   └── ...
+├── README.md                  # This documentation
+└── package.json               # Project manifest
 ```
 

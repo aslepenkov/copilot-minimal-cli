@@ -7,10 +7,11 @@
   "types": "dist/main.d.ts",
   "scripts": {
     "build": "tsc",
+    "build:bundle": "node esbuild.config.js",
     "start": "tsx src/main.ts analyze",
+    "demo": "tsx src/main.ts analyze --debug --max-iterations 10 \"use tools provided. find any one todo comment\"",
     "test": "vitest run --reporter=verbose",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:watch": "vitest"
   },
   "keywords": [
     "ai",

@@ -2,10 +2,10 @@ name: Test PR and Comment Results
 
 on:
   pull_request:
-    branches: [ arch-refactor, master ]
+    branches: [ dev, main ]
     types: [opened, synchronize, reopened]
   push:
-    branches: [ arch-refactor, master]
+    branches: [ dev, main]
 
 permissions:
   contents: read
