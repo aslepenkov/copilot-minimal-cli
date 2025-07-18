@@ -30,8 +30,8 @@ export class ReadOnlyFileSystem implements IFileSystem {
         return await fs.pathExists(absolutePath);
     }
 
-    async getWorkspaceStructure(maxSize: number = 2000): Promise<string> {
-        return this.buildDirectoryTree(this.workspacePath, '', 0, maxSize);
+    async getWorkspaceStructure(maxSize: number = 2000, maxDepth = 15): Promise<string> {
+        return this.buildDirectoryTree(this.workspacePath, 0, maxSize, maxDepth);
     }
 
     private resolvePath(filePath: string): string {
@@ -43,50 +43,60 @@ export class ReadOnlyFileSystem implements IFileSystem {
 
     private async buildDirectoryTree(
         dirPath: string,
-        prefix: string = '',
         depth: number = 0,
-        maxSize: number
+        maxSize: number,
+        maxDepth: number = 10, // Max depth to prevent infinite recursion
     ): Promise<string> {
-        if (prefix.length > maxSize) {
-            return prefix + '\n... (truncated due to size limit)';
-        }
-
-        if (depth > 10) { // Prevent infinite recursion
-            return prefix;
-        }
-
         let result = '';
+
+        // Stop recursion if maxDepth is reached
+        if (depth > maxDepth) {
+            return result + '... (truncated due to depth limit)\n';
+        }
+
         try {
+            // Read entries in the directory
             const entries = await fs.readdir(dirPath, { withFileTypes: true });
+
+            // Sort entries (directories first, then files)
             const sortedEntries = this.sortDirectoryEntries(entries);
 
             for (const entry of sortedEntries) {
                 if (this.shouldSkipEntry(entry.name)) {
-                    continue;
+                    continue; // Skip files and folders that should be ignored
                 }
 
                 const entryPath = path.join(dirPath, entry.name);
                 const relativePath = path.relative(this.workspacePath, entryPath);
 
-                if (entry.isDirectory()) {
-                    result += `${relativePath}/\n`;
-                    const subTree = await this.buildDirectoryTree(
-                        entryPath,
-                        result,
-                        depth + 1,
-                        maxSize
-                    );
-                    result = subTree;
-                } else {
-                    result += `${relativePath}\n`;
+                // Add the current entry (directory or file) to the result
+                result += entry.isDirectory() ? `${relativePath}/\n` : `${relativePath}\n`;
+
+                // Check if result exceeds maxSize and truncate if necessary
+                if (result.length > maxSize) {
+                    return result.slice(0, maxSize) + '\n... (truncated due to size limit)';
                 }
 
-                if (result.length > maxSize) {
-                    return result + '... (truncated due to size limit)';
+                // Recursively process subdirectories
+                if (entry.isDirectory()) {
+                    const subTree = await this.buildDirectoryTree(
+                        entryPath,
+                        depth + 1,
+                        maxSize,
+                        maxDepth
+                    );
+
+                    result += subTree;
+
+                    // Check again for size limit after processing subtree
+                    if (result.length > maxSize) {
+                        return result.slice(0, maxSize) + '\n... (truncated due to size limit)';
+                    }
                 }
             }
         } catch (error) {
-            // Skip directories that can't be read
+            // Handle cases where the directory is inaccessible (e.g., permissions issues)
+            result += `Error reading directory: ${dirPath}\n`;
         }
 
         return result;
@@ -105,7 +115,7 @@ export class ReadOnlyFileSystem implements IFileSystem {
         const skipPatterns = [
             'bin', 'obj', 'node_modules', 'dist', 'build', '__pycache__', 'logs'
         ];
-        
+
         return entryName.startsWith('.') || skipPatterns.includes(entryName);
     }
 }

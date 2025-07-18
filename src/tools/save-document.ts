@@ -44,7 +44,17 @@ export class SaveDocumentTool implements ITool {
     async execute(args: { filename?: string; filePath?: string; content: string; description?: string }): Promise<any> {
         try {
             // Accept either filename or filePath parameter
-            const filename = args.filename || args.filePath;
+            // Add datetime to filename if not already present
+            let filename = args.filename || args.filePath;
+            if (filename && typeof filename === 'string') {
+                const ext = path.extname(filename);
+                const base = path.basename(filename, ext);
+                const datetime = new Date().toISOString().replace(/[:.]/g, '-');
+                // Only add datetime if not already present
+                if (!base.match(/\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}/)) {
+                    filename = `${base}_${datetime}${ext}`;
+                }
+            }
             
             // Validate required arguments
             if (!filename || typeof filename !== 'string') {

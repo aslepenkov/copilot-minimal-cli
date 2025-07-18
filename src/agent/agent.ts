@@ -218,7 +218,7 @@ export class MVPStandaloneAgent {
             {{toolDescriptions}}
 
             ANALYSIS REQUEST: {{request}}`;
-        const workspaceStructure = await this.fileSystem.getWorkspaceStructure();
+        const workspaceStructure = await this.fileSystem.getWorkspaceStructure(2000, 1);
         const toolDescriptions = this.getToolDescriptions();
 
         return template
