@@ -2,10 +2,15 @@
  * MVP Standalone Agent - General Purpose Code Analysis
  */
 
-import * as path from 'path';
-import { MVPCopilotAPI, ReadOnlyFileSystem, FileLogger, type ILogger } from '../services';
-import { ITool, IFileSystem, ToolRegistry } from '../tools';
-import type { MVPAgentConfig, AgentResult, ToolCall } from './interfaces';
+import * as path from "path";
+import {
+    MVPCopilotAPI,
+    ReadOnlyFileSystem,
+    FileLogger,
+    type ILogger,
+} from "../services";
+import { ITool, IFileSystem, ToolRegistry } from "../tools";
+import type { MVPAgentConfig, AgentResult, ToolCall } from "./interfaces";
 
 // Main MVP Agent Class
 export class MVPStandaloneAgent {
@@ -18,7 +23,7 @@ export class MVPStandaloneAgent {
     constructor(config: MVPAgentConfig) {
         this.config = config;
         this.fileSystem = new ReadOnlyFileSystem(config.workspacePath);
-        this.logger = new FileLogger(path.join(process.cwd(), 'logs'));
+        this.logger = new FileLogger(path.join(process.cwd(), "logs"));
     }
 
     async initialize(): Promise<void> {
@@ -35,29 +40,45 @@ export class MVPStandaloneAgent {
         const copilotConfig = { debugMode: this.config.debugMode };
 
         if (this.config.githubToken) {
-            this.copilotAPI = await MVPCopilotAPI.createWithGitHubToken(this.config.githubToken, copilotConfig);
+            this.copilotAPI = await MVPCopilotAPI.createWithGitHubToken(
+                this.config.githubToken,
+                copilotConfig,
+            );
             console.log(`🔗 Copilot API initialized via GitHub token`);
         } else if (this.config.copilotApiKey) {
-            this.copilotAPI = new MVPCopilotAPI(this.config.copilotApiKey, copilotConfig);
+            this.copilotAPI = new MVPCopilotAPI(
+                this.config.copilotApiKey,
+                copilotConfig,
+            );
             console.log(`🔗 Copilot API initialized via API key`);
         }
     }
 
     private async validateWorkspace(): Promise<void> {
-        if (!await this.fileSystem.exists(this.config.workspacePath)) {
-            throw new Error(`Workspace path does not exist: ${this.config.workspacePath}`);
+        if (!(await this.fileSystem.exists(this.config.workspacePath))) {
+            throw new Error(
+                `Workspace path does not exist: ${this.config.workspacePath}`,
+            );
         }
     }
 
     private async initializeTools(): Promise<void> {
         this.toolRegistry.initializeReadOnlyTools(this.fileSystem);
-        const toolNames = this.toolRegistry.getAll().map(tool => tool.name).join(', ');
-        console.log(`🔧 Initialized ${this.toolRegistry.size()} tools: ${toolNames}`);
+        const toolNames = this.toolRegistry
+            .getAll()
+            .map((tool) => tool.name)
+            .join(", ");
+        console.log(
+            `🔧 Initialized ${this.toolRegistry.size()} tools: ${toolNames}`,
+        );
     }
 
     private async logInitializationComplete(): Promise<void> {
-        const workspaceStructure = await this.fileSystem.getWorkspaceStructure();
-        console.log(`📊 Workspace structure loaded (${workspaceStructure.length} characters)`);
+        const workspaceStructure =
+            await this.fileSystem.getWorkspaceStructure();
+        console.log(
+            `📊 Workspace structure loaded (${workspaceStructure.length} characters)`,
+        );
     }
 
     async analyzeWorkspace(customPrompt?: string): Promise<AgentResult> {
@@ -68,7 +89,11 @@ export class MVPStandaloneAgent {
             console.log(`\n🔍 User prompt: ${userPrompt.substring(0, 50)}...`);
 
             const analysisContext = this.createAnalysisContext();
-            const result = await this.runAnalysisLoop(systemPrompt, userPrompt, analysisContext);
+            const result = await this.runAnalysisLoop(
+                systemPrompt,
+                userPrompt,
+                analysisContext,
+            );
 
             await this.logAnalysisResults(userPrompt, result, analysisContext);
 
@@ -81,17 +106,26 @@ export class MVPStandaloneAgent {
 
     private async loadSystemPrompt(): Promise<string> {
         try {
-            const systemPromptPath = path.join(process.cwd(), 'prompt', 'system.txt');
+            const systemPromptPath = path.join(
+                process.cwd(),
+                "prompt",
+                "system.txt",
+            );
             if (await this.fileSystem.exists(systemPromptPath)) {
-                const systemPrompt = await this.fileSystem.readFile(systemPromptPath);
+                const systemPrompt =
+                    await this.fileSystem.readFile(systemPromptPath);
                 console.log(`📄 Using system prompt from input/system.txt`);
                 return systemPrompt.trim();
             }
         } catch (error) {
-            console.log(`⚠️  Error reading system prompt file, using fallback: ${error}`);
+            console.log(
+                `⚠️  Error reading system prompt file, using fallback: ${error}`,
+            );
         }
 
-        console.log(`⚠️  input/system.txt not found, using fallback system prompt`);
+        console.log(
+            `⚠️  input/system.txt not found, using fallback system prompt`,
+        );
         return "You are an AI assistant.";
     }
 
@@ -101,14 +135,16 @@ export class MVPStandaloneAgent {
         }
 
         try {
-            const promptPath = path.join(process.cwd(), 'prompt', 'prompt.txt');
+            const promptPath = path.join(process.cwd(), "prompt", "prompt.txt");
             if (await this.fileSystem.exists(promptPath)) {
                 const prompt = await this.fileSystem.readFile(promptPath);
                 console.log(`📄 Using prompt from input/prompt.txt`);
                 return prompt.trim();
             }
         } catch (error) {
-            console.log(`⚠️  Error reading prompt file, using fallback: ${error}`);
+            console.log(
+                `⚠️  Error reading prompt file, using fallback: ${error}`,
+            );
         }
 
         console.log(`⚠️  input/prompt.txt not found, using fallback prompt`);
@@ -120,38 +156,49 @@ export class MVPStandaloneAgent {
             startTime: Date.now(),
             toolCalls: [] as ToolCall[],
             iterations: 0,
-            analysisData: '',
+            analysisData: "",
         };
     }
 
     private async runAnalysisLoop(
         systemPrompt: string,
         userPrompt: string,
-        context: any
+        context: any,
     ): Promise<AgentResult> {
         const fullUserPrompt = await this.buildUserPrompt(userPrompt);
-        let currentResponse = await this.callCopilotAPI(fullUserPrompt, systemPrompt);
+        let currentResponse = await this.callCopilotAPI(
+            fullUserPrompt,
+            systemPrompt,
+        );
 
         while (context.iterations < this.config.maxIterations) {
             context.iterations++;
-            console.log(`\n📋 Iteration ${context.iterations}/${this.config.maxIterations}`);
+            console.log(
+                `\n📋 Iteration ${context.iterations}/${this.config.maxIterations}`,
+            );
 
             const extractedToolCalls = this.extractToolCalls(currentResponse);
 
             if (extractedToolCalls.length === 0) {
                 context.analysisData += currentResponse;
             }
-            
+
             // Break if any tool call is 'finish_analyze'
-            if (extractedToolCalls.some(tc => tc.name === 'finish_analyze')) {
-                console.log(`✅ 'finish_analyze' tool called. Stopping analysis loop.`);
+            if (extractedToolCalls.some((tc) => tc.name === "finish_analyze")) {
+                console.log(
+                    `✅ 'finish_analyze' tool called. Stopping analysis loop.`,
+                );
                 break;
             }
 
             await this.executeToolCalls(extractedToolCalls, context.toolCalls);
 
-            const toolResultsPrompt = await this.buildToolResultsPrompt(extractedToolCalls);
-            currentResponse = await this.callCopilotAPI(toolResultsPrompt, systemPrompt);
+            const toolResultsPrompt =
+                await this.buildToolResultsPrompt(extractedToolCalls);
+            currentResponse = await this.callCopilotAPI(
+                toolResultsPrompt,
+                systemPrompt,
+            );
         }
 
         const duration = Date.now() - context.startTime;
@@ -161,11 +208,14 @@ export class MVPStandaloneAgent {
             success: true,
             response: currentResponse,
             analysisData: JSON.stringify(context.analysisData),
-            iterations: context.iterations
+            iterations: context.iterations,
         };
     }
 
-    private async executeToolCalls(extractedToolCalls: ToolCall[], allToolCalls: ToolCall[]): Promise<void> {
+    private async executeToolCalls(
+        extractedToolCalls: ToolCall[],
+        allToolCalls: ToolCall[],
+    ): Promise<void> {
         for (const toolCall of extractedToolCalls) {
             console.log(`🔧 Executing tool: ${toolCall.name}`);
 
@@ -181,14 +231,23 @@ export class MVPStandaloneAgent {
                 allToolCalls.push(toolCall);
 
                 if (this.config.debugMode) {
-                    const resultStr = typeof result === 'string' ? result : JSON.stringify(result);
-                    const preview = resultStr.length > 150
-                        ? resultStr.slice(0, 100) + ' ... ' + resultStr.slice(-50)
-                        : resultStr;
+                    const resultStr =
+                        typeof result === "string"
+                            ? result
+                            : JSON.stringify(result);
+                    const preview =
+                        resultStr.length > 150
+                            ? resultStr.slice(0, 100) +
+                              " ... " +
+                              resultStr.slice(-50)
+                            : resultStr;
                     console.log(`  Result:`, preview);
                 }
             } catch (error: any) {
-                console.error(`  Error executing tool ${toolCall.name}:`, error);
+                console.error(
+                    `  Error executing tool ${toolCall.name}:`,
+                    error,
+                );
                 toolCall.result = { error: error.message };
                 toolCall.timestamp = new Date();
                 allToolCalls.push(toolCall);
@@ -196,23 +255,27 @@ export class MVPStandaloneAgent {
         }
     }
 
-    private async logAnalysisResults(userPrompt: string, result: AgentResult, context: any): Promise<void> {
+    private async logAnalysisResults(
+        userPrompt: string,
+        result: AgentResult,
+        context: any,
+    ): Promise<void> {
         await this.logger.logAnalysis({
             prompt: userPrompt,
             analysisData: result.analysisData,
             toolCalls: context.toolCalls,
             iterations: result.iterations,
-            duration: Date.now() - context.startTime
+            duration: Date.now() - context.startTime,
         });
     }
 
     private createErrorResult(errorMessage: string): AgentResult {
         return {
             success: false,
-            response: '',
+            response: "",
             analysisData: {},
             iterations: 0,
-            error: errorMessage
+            error: errorMessage,
         };
     }
 
@@ -225,42 +288,54 @@ export class MVPStandaloneAgent {
             WORKSPACE CONTEXT:
             Working Directory: {{workspacePath}}
             Workspace Structure: {{workspaceStructure}}`;
-        const workspaceStructure = await this.fileSystem.getWorkspaceStructure(2000, 1);
+        const workspaceStructure = await this.fileSystem.getWorkspaceStructure(
+            2000,
+            1,
+        );
         const toolDescriptions = this.getToolDescriptions();
 
         return template
-            .replace('{{workspacePath}}', this.config.workspacePath)
-            .replace('{{workspaceStructure}}', workspaceStructure)
-            .replace('{{toolDescriptions}}', toolDescriptions)
-            .replace('{{request}}', request);
+            .replace("{{workspacePath}}", this.config.workspacePath)
+            .replace("{{workspaceStructure}}", workspaceStructure)
+            .replace("{{toolDescriptions}}", toolDescriptions)
+            .replace("{{request}}", request);
     }
 
     private getToolDescriptions(): string {
-        return this.toolRegistry.getAll()
+        return this.toolRegistry
+            .getAll()
             .map((tool: ITool) => `${tool.name}: ${tool.description}`)
-            .join('\n');
+            .join("\n");
     }
 
-    private async buildToolResultsPrompt(toolCalls: ToolCall[]): Promise<string> {
+    private async buildToolResultsPrompt(
+        toolCalls: ToolCall[],
+    ): Promise<string> {
         const template = `Tool execution results:
             {{results}}
             Continue your analysis based on these results.
             If you have enough information, provide a comprehensive summary of your findings.`;
         const results = this.formatToolResults(toolCalls);
-        return template.replace('{{results}}', results);
+        return template.replace("{{results}}", results);
     }
 
     private formatToolResults(toolCalls: ToolCall[]): string {
-        return toolCalls.map(call =>
-            `Tool: ${call.name}\nArguments: ${JSON.stringify(call.arguments)}\nResult: ${JSON.stringify(call.result)}`
-        ).join('\n\n');
+        return toolCalls
+            .map(
+                (call) =>
+                    `Tool: ${call.name}\nArguments: ${JSON.stringify(call.arguments)}\nResult: ${JSON.stringify(call.result)}`,
+            )
+            .join("\n\n");
     }
 
-    private async callCopilotAPI(prompt: string, systemPrompt?: string): Promise<string> {
+    private async callCopilotAPI(
+        prompt: string,
+        systemPrompt?: string,
+    ): Promise<string> {
         console.log(`🧠 Copilot API Call (${prompt.length} chars)`);
 
         if (!this.copilotAPI) {
-            throw new Error('Copilot API is not initialized.');
+            throw new Error("Copilot API is not initialized.");
         }
 
         const response = await this.copilotAPI.callAPI(prompt, systemPrompt);

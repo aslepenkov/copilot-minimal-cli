@@ -1,12 +1,12 @@
 /**
  * Read-Only File System Implementation
- * 
+ *
  * Provides safe, read-only access to the file system with workspace structure analysis
  */
 
-import * as path from 'path';
-import fs from 'fs-extra';
-import { IFileSystem } from '../../tools/interfaces';
+import * as path from "path";
+import fs from "fs-extra";
+import { IFileSystem } from "../../tools/interfaces";
 
 export class ReadOnlyFileSystem implements IFileSystem {
     private readonly workspacePath: string;
@@ -17,7 +17,7 @@ export class ReadOnlyFileSystem implements IFileSystem {
 
     async readFile(filePath: string): Promise<string> {
         const absolutePath = this.resolvePath(filePath);
-        return await fs.readFile(absolutePath, 'utf-8');
+        return await fs.readFile(absolutePath, "utf-8");
     }
 
     async listDirectory(dirPath: string): Promise<string[]> {
@@ -30,8 +30,16 @@ export class ReadOnlyFileSystem implements IFileSystem {
         return await fs.pathExists(absolutePath);
     }
 
-    async getWorkspaceStructure(maxSize: number = 2000, maxDepth = 10): Promise<string> {
-        return this.buildDirectoryTree(this.workspacePath, 0, maxSize, maxDepth);
+    async getWorkspaceStructure(
+        maxSize: number = 2000,
+        maxDepth = 10,
+    ): Promise<string> {
+        return this.buildDirectoryTree(
+            this.workspacePath,
+            0,
+            maxSize,
+            maxDepth,
+        );
     }
 
     private resolvePath(filePath: string): string {
@@ -47,7 +55,7 @@ export class ReadOnlyFileSystem implements IFileSystem {
         maxSize: number,
         maxDepth: number = 10, // Max depth to prevent infinite recursion
     ): Promise<string> {
-        let result = '';
+        let result = "";
 
         // Stop recursion if maxDepth is reached
         if (depth > maxDepth) {
@@ -67,14 +75,22 @@ export class ReadOnlyFileSystem implements IFileSystem {
                 }
 
                 const entryPath = path.join(dirPath, entry.name);
-                const relativePath = path.relative(this.workspacePath, entryPath);
+                const relativePath = path.relative(
+                    this.workspacePath,
+                    entryPath,
+                );
 
                 // Add the current entry (directory or file) to the result
-                result += entry.isDirectory() ? `${relativePath}/\n` : `${relativePath}\n`;
+                result += entry.isDirectory()
+                    ? `${relativePath}/\n`
+                    : `${relativePath}\n`;
 
                 // Check if result exceeds maxSize and truncate if necessary
                 if (result.length > maxSize) {
-                    return result.slice(0, maxSize) + '\n... (truncated due to size limit)';
+                    return (
+                        result.slice(0, maxSize) +
+                        "\n... (truncated due to size limit)"
+                    );
                 }
 
                 // Recursively process subdirectories
@@ -83,14 +99,17 @@ export class ReadOnlyFileSystem implements IFileSystem {
                         entryPath,
                         depth + 1,
                         maxSize,
-                        maxDepth
+                        maxDepth,
                     );
 
                     result += subTree;
 
                     // Check again for size limit after processing subtree
                     if (result.length > maxSize) {
-                        return result.slice(0, maxSize) + '\n... (truncated due to size limit)';
+                        return (
+                            result.slice(0, maxSize) +
+                            "\n... (truncated due to size limit)"
+                        );
                     }
                 }
             }
@@ -113,9 +132,15 @@ export class ReadOnlyFileSystem implements IFileSystem {
 
     private shouldSkipEntry(entryName: string): boolean {
         const skipPatterns = [
-            'bin', 'obj', 'node_modules', 'dist', 'build', '__pycache__', 'logs'
+            "bin",
+            "obj",
+            "node_modules",
+            "dist",
+            "build",
+            "__pycache__",
+            "logs",
         ];
 
-        return entryName.startsWith('.') || skipPatterns.includes(entryName);
+        return entryName.startsWith(".") || skipPatterns.includes(entryName);
     }
 }

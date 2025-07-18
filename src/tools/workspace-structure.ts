@@ -1,21 +1,21 @@
 /**
  * Workspace Structure Tool
- * 
+ *
  * Provides complete workspace file structure overview
  */
 
-import { ITool, IFileSystem } from './interfaces';
+import { ITool, IFileSystem } from "./interfaces";
 
 export class GetWorkspaceStructureTool implements ITool {
-    name = 'get_workspace_structure';
-    description = 'Get the complete workspace file structure';
+    name = "get_workspace_structure";
+    description = "Get the complete workspace file structure";
     parameters = {
-        type: 'object',
+        type: "object",
         properties: {},
-        required: []
+        required: [],
     };
 
-    constructor(private fileSystem: IFileSystem) { }
+    constructor(private fileSystem: IFileSystem) {}
 
     async execute(): Promise<any> {
         try {

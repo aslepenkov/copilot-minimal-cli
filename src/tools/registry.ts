@@ -1,16 +1,16 @@
 /**
  * Tool Registry
- * 
+ *
  * Central registry for managing and organizing tools
  */
 
-import { ITool, IFileSystem } from './interfaces';
-import { ReadFileTool } from './read-file';
-import { ListDirectoryTool } from './list-directory';
-import { GetWorkspaceStructureTool } from './workspace-structure';
-import { FindCodeFilesTool } from './find-files';
-import { FinishAnalyzeTool } from './finish-analyze';
-import { SaveDocumentTool } from './save-document';
+import { ITool, IFileSystem } from "./interfaces";
+import { ReadFileTool } from "./read-file";
+import { ListDirectoryTool } from "./list-directory";
+import { GetWorkspaceStructureTool } from "./workspace-structure";
+import { FindCodeFilesTool } from "./find-files";
+import { FinishAnalyzeTool } from "./finish-analyze";
+import { SaveDocumentTool } from "./save-document";
 
 export class ToolRegistry {
     private tools: Map<string, ITool> = new Map();

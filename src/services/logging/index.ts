@@ -2,4 +2,4 @@
  * Logging Module Exports
  */
 
-export * from './file-logger';
+export * from "./file-logger";

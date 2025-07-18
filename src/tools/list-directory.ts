@@ -1,23 +1,26 @@
 /**
  * List Directory Tool
- * 
+ *
  * Lists contents of directories for workspace exploration
  */
 
-import { ITool, IFileSystem } from './interfaces';
+import { ITool, IFileSystem } from "./interfaces";
 
 export class ListDirectoryTool implements ITool {
-    name = 'list_directory';
-    description = 'List the contents of a directory';
+    name = "list_directory";
+    description = "List the contents of a directory";
     parameters = {
-        type: 'object',
+        type: "object",
         properties: {
-            path: { type: 'string', description: 'Path to the directory to list' }
+            path: {
+                type: "string",
+                description: "Path to the directory to list",
+            },
         },
-        required: ['path']
+        required: ["path"],
     };
 
-    constructor(private fileSystem: IFileSystem) { }
+    constructor(private fileSystem: IFileSystem) {}
 
     async execute(args: { path: string }): Promise<any> {
         try {

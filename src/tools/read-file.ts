@@ -1,23 +1,26 @@
 /**
  * Read File Tool
- * 
+ *
  * Provides safe file reading capabilities with content size limits
  */
 
-import { ITool, IFileSystem } from './interfaces';
+import { ITool, IFileSystem } from "./interfaces";
 
 export class ReadFileTool implements ITool {
-    name = 'read_file';
-    description = 'Read the contents of a file for analysis';
+    name = "read_file";
+    description = "Read the contents of a file for analysis";
     parameters = {
-        type: 'object',
+        type: "object",
         properties: {
-            filePath: { type: 'string', description: 'Path to the file to read' }
+            filePath: {
+                type: "string",
+                description: "Path to the file to read",
+            },
         },
-        required: ['filePath']
+        required: ["filePath"],
     };
 
-    constructor(private fileSystem: IFileSystem) { }
+    constructor(private fileSystem: IFileSystem) {}
 
     async execute(args: { filePath: string }): Promise<any> {
         try {
@@ -25,7 +28,7 @@ export class ReadFileTool implements ITool {
             return {
                 content: content.substring(0, 5000), // Limit content size
                 size: content.length,
-                truncated: content.length > 5000
+                truncated: content.length > 5000,
             };
         } catch (error: any) {
             return { error: error.message };

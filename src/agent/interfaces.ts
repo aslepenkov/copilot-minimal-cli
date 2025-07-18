@@ -1,6 +1,6 @@
 /**
  * Agent Core Interfaces
- * 
+ *
  * Defines contracts for agent configuration and results
  */
 
@@ -30,5 +30,5 @@ export interface ToolCall {
 export const DEFAULT_CONFIG: MVPAgentConfig = {
     workspacePath: process.cwd(),
     maxIterations: 10,
-    debugMode: false
+    debugMode: false,
 };
