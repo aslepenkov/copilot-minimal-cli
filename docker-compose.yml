@@ -1,0 +1,10 @@
+services:
+  copilot-minimal:
+    build: .
+    container_name: copilot-minimal-cli
+    volumes:
+      - ./logs:/app/logs
+      - ./input:/app/input
+    restart: unless-stopped
+
+    command: ["tail", "-f", "/dev/null"]

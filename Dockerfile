@@ -2,14 +2,12 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install dependencies
-COPY package.json pnpm-lock.yaml ./
-RUN npm install -g pnpm && pnpm install
-
 # Copy source and build
-COPY . .
-RUN pnpm run build && pnpm prune --prod
-
+COPY . . 
+RUN rm -rf node_modules dist
+RUN npm install -g pnpm && pnpm install
+RUN pnpm run build:bundle
+RUN pnpm prune --prod
 # Create data directory
 RUN mkdir -p /app/logs
 
