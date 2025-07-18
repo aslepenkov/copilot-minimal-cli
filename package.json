@@ -7,13 +7,9 @@
   "types": "dist/main.d.ts",
   "scripts": {
     "build": "tsc",
-    "build:bundle": "node esbuild.config.js",
-    "start": "tsx main.ts analyze",
-    "analyze": "tsx main.ts analyze",
-    "analyze-prod": "npm run build:bundle && node dist/bundle.js analyze",
+    "start": "tsx src/main.ts analyze",
     "test": "vitest run --reporter=verbose",
     "test:watch": "vitest",
-    "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage"
   },
   "keywords": [
@@ -37,6 +33,7 @@
     "@vitest/ui": "^3.2.4",
     "esbuild": "^0.25.6",
     "rimraf": "^5.0.0",
+    "ts-node": "^10.9.2",
     "tsx": "^4.0.0",
     "typescript": "^5.3.0",
     "vitest": "^3.2.4"

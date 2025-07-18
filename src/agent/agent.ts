@@ -33,7 +33,7 @@ export class MVPStandaloneAgent {
 
     private async initializeCopilotAPI(): Promise<void> {
         const copilotConfig = { debugMode: this.config.debugMode };
-        
+
         if (this.config.githubToken) {
             this.copilotAPI = await MVPCopilotAPI.createWithGitHubToken(this.config.githubToken, copilotConfig);
             console.log(`🔗 Copilot API initialized via GitHub token`);
@@ -64,12 +64,12 @@ export class MVPStandaloneAgent {
         try {
             const systemPrompt = await this.loadSystemPrompt();
             const userPrompt = await this.loadUserPrompt(customPrompt);
-            
+
             console.log(`\n🔍 Analyzing workspace: ${userPrompt.substring(0, 50)}...`);
 
             const analysisContext = this.createAnalysisContext();
             const result = await this.runAnalysisLoop(systemPrompt, userPrompt, analysisContext);
-            
+
             await this.logAnalysisResults(userPrompt, result, analysisContext);
             return result;
 
@@ -81,7 +81,7 @@ export class MVPStandaloneAgent {
 
     private async loadSystemPrompt(): Promise<string> {
         try {
-            const systemPromptPath = path.join(process.cwd(), 'input', 'system.txt');
+            const systemPromptPath = path.join(process.cwd(), 'prompt', 'system.txt');
             if (await this.fileSystem.exists(systemPromptPath)) {
                 const systemPrompt = await this.fileSystem.readFile(systemPromptPath);
                 console.log(`📄 Using system prompt from input/system.txt`);
@@ -90,7 +90,7 @@ export class MVPStandaloneAgent {
         } catch (error) {
             console.log(`⚠️  Error reading system prompt file, using fallback: ${error}`);
         }
-        
+
         console.log(`⚠️  input/system.txt not found, using fallback system prompt`);
         return "You are an AI assistant.";
     }
@@ -101,7 +101,7 @@ export class MVPStandaloneAgent {
         }
 
         try {
-            const promptPath = path.join(process.cwd(), 'input', 'prompt.txt');
+            const promptPath = path.join(process.cwd(), 'prompt', 'prompt.txt');
             if (await this.fileSystem.exists(promptPath)) {
                 const prompt = await this.fileSystem.readFile(promptPath);
                 console.log(`📄 Using prompt from input/prompt.txt`);
@@ -125,8 +125,8 @@ export class MVPStandaloneAgent {
     }
 
     private async runAnalysisLoop(
-        systemPrompt: string, 
-        userPrompt: string, 
+        systemPrompt: string,
+        userPrompt: string,
         context: any
     ): Promise<AgentResult> {
         const fullUserPrompt = await this.buildUserPrompt(userPrompt);
@@ -140,16 +140,14 @@ export class MVPStandaloneAgent {
 
             if (extractedToolCalls.length === 0) {
                 console.log(`📊 Analysis complete - no more tool calls needed {TODO STOP HERE EXIT LOOP}`);
-                context.analysisData = currentResponse;
+                context.analysisData += currentResponse;
                 // break;
             }
 
             await this.executeToolCalls(extractedToolCalls, context.toolCalls);
-            
+
             const toolResultsPrompt = await this.buildToolResultsPrompt(extractedToolCalls);
             currentResponse = await this.callCopilotAPI(toolResultsPrompt, systemPrompt);
-
-             
         }
 
         const duration = Date.now() - context.startTime;
@@ -211,7 +209,15 @@ export class MVPStandaloneAgent {
     }
 
     private async buildUserPrompt(request: string): Promise<string> {
-        const template = await this.loadUserPromptTemplate();
+        const template = `WORKSPACE CONTEXT:
+            Working Directory: {{workspacePath}}
+            Workspace Structure:
+            {{workspaceStructure}}
+
+            AVAILABLE TOOLS:
+            {{toolDescriptions}}
+
+            ANALYSIS REQUEST: {{request}}`;
         const workspaceStructure = await this.fileSystem.getWorkspaceStructure();
         const toolDescriptions = this.getToolDescriptions();
 
@@ -222,19 +228,6 @@ export class MVPStandaloneAgent {
             .replace('{{request}}', request);
     }
 
-    private async loadUserPromptTemplate(): Promise<string> {
-        try {
-            const templatePath = path.join(process.cwd(), 'input', 'user-prompt-template.txt');
-            if (await this.fileSystem.exists(templatePath)) {
-                return await this.fileSystem.readFile(templatePath);
-            }
-        } catch (error) {
-            console.log(`⚠️  Error reading user prompt template, using fallback: ${error}`);
-        }
-        
-        return "WORKSPACE: {{workspacePath}}\nSTRUCTURE: {{workspaceStructure}}\nTOOLS: {{toolDescriptions}}\nREQUEST: {{request}}";
-    }
-
     private getToolDescriptions(): string {
         return this.toolRegistry.getAll()
             .map((tool: ITool) => `${tool.name}: ${tool.description}`)
@@ -242,22 +235,12 @@ export class MVPStandaloneAgent {
     }
 
     private async buildToolResultsPrompt(toolCalls: ToolCall[]): Promise<string> {
-        const template = await this.loadToolResultsTemplate();
+        const template = `Tool execution results:
+            {{results}}
+            Continue your analysis based on these results.
+            If you have enough information, provide a comprehensive summary of your findings.`;
         const results = this.formatToolResults(toolCalls);
         return template.replace('{{results}}', results);
-    }
-
-    private async loadToolResultsTemplate(): Promise<string> {
-        try {
-            const templatePath = path.join(process.cwd(), 'input', 'tool-results-template.txt');
-            if (await this.fileSystem.exists(templatePath)) {
-                return await this.fileSystem.readFile(templatePath);
-            }
-        } catch (error) {
-            console.log(`⚠️  Error reading tool results template, using fallback: ${error}`);
-        }
-        
-        return "Results: {{results}}";
     }
 
     private formatToolResults(toolCalls: ToolCall[]): string {
@@ -272,54 +255,41 @@ export class MVPStandaloneAgent {
         if (!this.copilotAPI) {
             throw new Error('Copilot API is not initialized.');
         }
-        
+
         const response = await this.copilotAPI.callAPI(prompt, systemPrompt);
         await this.logger.logLLMOutput(prompt, response);
         return response;
     }
 
     private extractToolCalls(response: string): ToolCall[] {
-        const toolCalls: ToolCall[] = [];
+        // Regex to find JSON objects `{ ... }` in the text
+        const jsonRegex = /\{[\s\S]*\}/;
 
-        // Extract JSON from markdown code blocks
-        const markdownMatches = this.extractMarkdownJSON(response);
-        if (markdownMatches.length > 0) {
-            toolCalls.push(...markdownMatches);
-        }
+        // Find all matches for JSON objects
+        const matches = response.match(jsonRegex);
 
-        // Fallback to raw JSON extraction if no markdown blocks found
-        if (toolCalls.length === 0) {
-            const rawMatches = this.extractRawJSON(response);
-            toolCalls.push(...rawMatches);
-        }
-
-        return toolCalls;
-    }
-
-    private extractMarkdownJSON(response: string): ToolCall[] {
-        const toolCalls: ToolCall[] = [];
-        const markdownJsonRegex = /```json\s*(\{[\s\S]*?\})\s*```/g;
-        let match;
-
-        while ((match = markdownJsonRegex.exec(response)) !== null) {
-            try {
-                const parsed = JSON.parse(match[1]);
-                if (parsed.tool_call && parsed.tool_call.name) {
-                    toolCalls.push(this.createToolCall(parsed.tool_call));
+        // Parse and collect valid JSON objects
+        const parsedObjects: ToolCall[] = [];
+        if (matches) {
+            for (const match of matches) {
+                try {
+                    // Attempt to parse each match as JSON
+                    const parsed = JSON.parse(match);
+                    parsedObjects.push(parsed.tool_call);
+                } catch (error) {
+                    // Skip parsing if invalid JSON
+                    console.error("Invalid JSON object:", match);
                 }
-            } catch (error) {
-                console.warn(`Failed to parse markdown JSON tool call: ${match[1]}`);
             }
         }
 
-        return toolCalls;
+        return parsedObjects;
     }
-
-    private extractRawJSON(response: string): ToolCall[] {
+    private extractToolCallsbad(response: string): ToolCall[] {
         const toolCalls: ToolCall[] = [];
-        const toolCallRegex = /\{\s*"tool_call"\s*:\s*\{[^}]*\}\s*\}/g;
+        // Regex to match any JSON object containing a 'tool_call' property
+        const toolCallRegex = /\{[^{}]*"tool_call"\s*:\s*\{[\s\S]*?\}[^{}]*\}/g;
         const matches = response.match(toolCallRegex);
-
         if (matches) {
             for (const match of matches) {
                 try {
@@ -328,11 +298,12 @@ export class MVPStandaloneAgent {
                         toolCalls.push(this.createToolCall(parsed.tool_call));
                     }
                 } catch (error) {
-                    console.warn(`Failed to parse raw JSON tool call: ${match}`);
+                    console.warn(`Failed to parse tool call JSON: ${match}`);
+                    continue;
+                    // Ignore parse errors
                 }
             }
         }
-
         return toolCalls;
     }
 

@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { GetWorkspaceStructureTool } from '../tools/workspace-structure';
+import { GetWorkspaceStructureTool } from '../src/tools/workspace-structure';
 import { MockFileSystem } from './mock-filesystem';
 
 describe('GetWorkspaceStructureTool', () => {

@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { FindCodeFilesTool } from '../tools/find-files';
+import { FindCodeFilesTool } from '../src/tools/find-files';
 import { MockFileSystem } from './mock-filesystem';
 
 describe('FindCodeFilesTool', () => {

@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { ReadFileTool } from '../tools/read-file';
+import { ReadFileTool } from '../src/tools/read-file';
 import { MockFileSystem } from './mock-filesystem';
 
 describe('ReadFileTool', () => {

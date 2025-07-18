@@ -80,13 +80,13 @@ export class SaveDocumentTool implements ITool {
             await fs.writeFile(filePath, args.content, 'utf8');
 
             // Get file stats
-            const stats = await fs.stat(filePath);
+            //const stats = await fs.stat(filePath);
 
             return {
                 success: true,
                 filename: sanitizedFilename,
                 path: filePath,
-                size: stats.size,
+                //size: stats.size,
                 description: args.description || '',
                 timestamp: new Date().toISOString(),
                 message: `Document saved successfully to logs/${sanitizedFilename}`

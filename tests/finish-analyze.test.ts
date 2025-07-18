@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { FinishAnalyzeTool } from '../tools/finish-analyze';
+import { FinishAnalyzeTool } from '../src/tools/finish-analyze';
 
 describe('FinishAnalyzeTool', () => {
     let tool: FinishAnalyzeTool;

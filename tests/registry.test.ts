@@ -5,10 +5,10 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { ToolRegistry } from '../tools/registry';
-import { ReadFileTool } from '../tools/read-file';
-import { ListDirectoryTool } from '../tools/list-directory';
-import { ITool } from '../tools/interfaces';
+import { ToolRegistry } from '../src/tools/registry';
+import { ReadFileTool } from '../src/tools/read-file';
+import { ListDirectoryTool } from '../src/tools/list-directory';
+import { ITool } from '../src/tools/interfaces';
 import { MockFileSystem } from './mock-filesystem';
 
 describe('ToolRegistry', () => {

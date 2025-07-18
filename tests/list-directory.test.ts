@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { ListDirectoryTool } from '../tools/list-directory';
+import { ListDirectoryTool } from '../src/tools/list-directory';
 import { MockFileSystem } from './mock-filesystem';
 
 describe('ListDirectoryTool', () => {

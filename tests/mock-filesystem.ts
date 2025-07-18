@@ -4,7 +4,7 @@
  * Provides a mock implementation of IFileSystem for unit testing tools
  */
 
-import { IFileSystem } from '../tools/interfaces';
+import { IFileSystem } from '../src/tools/interfaces';
 
 export class MockFileSystem implements IFileSystem {
     private files: Map<string, string> = new Map();

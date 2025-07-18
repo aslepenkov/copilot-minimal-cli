@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { SaveDocumentTool } from '../tools/save-document';
+import { SaveDocumentTool } from '../src/tools/save-document';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
