@@ -71,8 +71,8 @@ export class MVPStandaloneAgent {
             const result = await this.runAnalysisLoop(systemPrompt, userPrompt, analysisContext);
 
             await this.logAnalysisResults(userPrompt, result, analysisContext);
+            
             return result;
-
         } catch (error: any) {
             console.error(`❌ Analysis failed:`, error);
             return this.createErrorResult(error.message);
@@ -160,7 +160,7 @@ export class MVPStandaloneAgent {
         return {
             success: true,
             response: currentResponse,
-            analysisData: context.analysisData,
+            analysisData: JSON.stringify(context.analysisData),
             iterations: context.iterations
         };
     }
@@ -287,36 +287,6 @@ export class MVPStandaloneAgent {
         }
 
         return parsedObjects;
-    }
-    private extractToolCallsbad(response: string): ToolCall[] {
-        const toolCalls: ToolCall[] = [];
-        // Regex to match any JSON object containing a 'tool_call' property
-        const toolCallRegex = /\{[^{}]*"tool_call"\s*:\s*\{[\s\S]*?\}[^{}]*\}/g;
-        const matches = response.match(toolCallRegex);
-        if (matches) {
-            for (const match of matches) {
-                try {
-                    const parsed = JSON.parse(match);
-                    if (parsed.tool_call && parsed.tool_call.name) {
-                        toolCalls.push(this.createToolCall(parsed.tool_call));
-                    }
-                } catch (error) {
-                    console.warn(`Failed to parse tool call JSON: ${match}`);
-                    continue;
-                    // Ignore parse errors
-                }
-            }
-        }
-        return toolCalls;
-    }
-
-    private createToolCall(toolCallData: any): ToolCall {
-        return {
-            name: toolCallData.name,
-            arguments: toolCallData.arguments || {},
-            result: null,
-            timestamp: new Date()
-        };
     }
 }
 

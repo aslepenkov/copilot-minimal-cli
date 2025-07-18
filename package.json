@@ -8,6 +8,7 @@
   "scripts": {
     "build": "tsc",
     "start": "tsx src/main.ts analyze",
+    "demo": "tsx src/main.ts analyze --debug --max-iterations 10 \"use tools provided. find any one todo comment\"",
     "test": "vitest run --reporter=verbose",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"

@@ -30,7 +30,7 @@ export class ReadOnlyFileSystem implements IFileSystem {
         return await fs.pathExists(absolutePath);
     }
 
-    async getWorkspaceStructure(maxSize: number = 2000, maxDepth = 15): Promise<string> {
+    async getWorkspaceStructure(maxSize: number = 2000, maxDepth = 10): Promise<string> {
         return this.buildDirectoryTree(this.workspacePath, 0, maxSize, maxDepth);
     }
 
@@ -51,7 +51,7 @@ export class ReadOnlyFileSystem implements IFileSystem {
 
         // Stop recursion if maxDepth is reached
         if (depth > maxDepth) {
-            return result + '... (truncated due to depth limit)\n';
+            return result;
         }
 
         try {
