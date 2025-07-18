@@ -9,7 +9,7 @@
     "build": "tsc",
     "build:bundle": "node esbuild.config.js",
     "start": "tsx src/main.ts analyze",
-    "demo": "tsx src/main.ts analyze --debug --max-iterations 10 \"use tools provided. find any one todo comment\"",
+    "demo": "tsx src/main.ts analyze --debug --max-iterations 10 --prompt \"use tools provided. find any one todo comment\"",
     "test": "vitest run --reporter=verbose",
     "test:watch": "vitest"
   },
@@ -25,6 +25,7 @@
   "license": "MIT",
   "dependencies": {
     "@vscode/copilot-api": "^0.1.1",
+    "commander": "^14.0.0",
     "dotenv": "^16.3.0",
     "fs-extra": "^11.2.0"
   },

@@ -15,9 +15,9 @@ A minimalistic, prompt-driven code analysis tool powered by GitHub Copilot API.
 
 ```bash
 # start container
-docker compose up -d 
+docker compose up -d
 
-docker exec -it copilot-minimal-cli node dist/bundle.js analyze -- --workspace ./input/react/sample --max-iterations 10 --debug    
+docker exec -it copilot-minimal-cli node dist/bundle.js analyze -- --workspace ./input/react/sample --max-iterations 10 --debug
 
 docker exec -it copilot-minimal-cli node dist/bundle.js analyze  # uses /app/input/ by default
 
@@ -26,10 +26,11 @@ docker compose down
 ```
 
 # Get shell access to running container
-docker exec -it copilot-minimal-cli  sh
 
+docker exec -it copilot-minimal-cli sh
 
 **Volume Mappings:**
+
 - `logs:/app/logs` - Analysis logs and outputs
 - `input:/app/input` - Live-reload prompts and configuration (optional)
 
@@ -43,7 +44,7 @@ docker exec -it copilot-minimal-cli  sh
 ## Available Tools
 
 - `read_file` - Read file contents
-- `list_directory` - List directory contents  
+- `list_directory` - List directory contents
 - `get_workspace_structure` - Get complete workspace structure
 - `find_all_files` - Find all files in workspace
 
@@ -81,6 +82,7 @@ The MVP Code Analyzer follows a modular, clean architecture with clear separatio
 ### Core Components
 
 #### 1. CLI Layer (`main.ts`)
+
 ```
 ┌─────────────────────────────────────────┐
 │              CLI Interface              │
@@ -99,6 +101,7 @@ The MVP Code Analyzer follows a modular, clean architecture with clear separatio
 ```
 
 #### 2. Agent Core (`agent/`)
+
 ```
 ┌─────────────────────────────────────────┐
 │            MVPStandaloneAgent           │
@@ -127,6 +130,7 @@ The MVP Code Analyzer follows a modular, clean architecture with clear separatio
 ```
 
 #### 3. Tools Architecture (`tools/`)
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                        Tools Module                             │
@@ -164,6 +168,7 @@ The MVP Code Analyzer follows a modular, clean architecture with clear separatio
 ```
 
 #### 4. Data Flow
+
 ```
 ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
 │   User      │───▶│    CLI      │───▶│   Agent     │───▶│  Copilot    │
@@ -183,6 +188,7 @@ The MVP Code Analyzer follows a modular, clean architecture with clear separatio
 ```
 
 #### 5. File Structure
+
 ```
 copilot-minimal-cli/
 ├── src/
@@ -222,4 +228,3 @@ copilot-minimal-cli/
 ├── README.md                  # This documentation
 └── package.json               # Project manifest
 ```
-
