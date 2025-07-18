@@ -11,7 +11,7 @@
 
 import * as dotenv from 'dotenv';
 import * as path from 'path';
-import { MVPStandaloneAgent, defaultMVPConfig} from './agent';
+import { MVPStandaloneAgent, defaultMVPConfig } from './agent';
 import { getToken } from './services';
 
 // Load environment variables
@@ -128,12 +128,12 @@ async function runAnalysis(prompt: string, options: MVPCLIOptions): Promise<void
 			if (result.analysisData) {
 				const data = result.analysisData;
 
-				if (data.summary) {
-					console.log(`\n📋 Summary: ${data.summary}`);
+				if (data) {
+					console.log(`\n📋 Summary: ${data}`);
 				}
 			}
 
-			console.log('\n📝 Full Response:');
+			console.log('\n📝 Last Response:');
 			console.log(result.response);
 		} else {
 			console.error(`❌ Analysis failed: ${result.error}`);
@@ -142,6 +142,7 @@ async function runAnalysis(prompt: string, options: MVPCLIOptions): Promise<void
 		console.log('\n📁 Logs saved to: ./logs/');
 		console.log('   - LLM interactions: llm_output_[date].jsonl');
 		console.log('   - Analysis results: analysis_[date].jsonl');
+		console.log('🔄️ Artifacts saved to: ./output/');
 
 	} catch (error: any) {
 		console.error('💥 Fatal error:', error.message);
@@ -156,6 +157,14 @@ async function main(): Promise<void> {
 
 	if (!command) {
 		printUsage();
+
+		// Validate API access
+		if (!process.env.GITHUB_TOKEN) {
+			console.error('❌ GitHub token or is required for Copilot API access');
+			await getToken();
+			return;
+		}
+
 		return;
 	}
 

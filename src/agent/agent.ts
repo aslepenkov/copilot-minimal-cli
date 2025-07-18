@@ -65,13 +65,13 @@ export class MVPStandaloneAgent {
             const systemPrompt = await this.loadSystemPrompt();
             const userPrompt = await this.loadUserPrompt(customPrompt);
 
-            console.log(`\n🔍 Analyzing workspace: ${userPrompt.substring(0, 50)}...`);
+            console.log(`\n🔍 User prompt: ${userPrompt.substring(0, 50)}...`);
 
             const analysisContext = this.createAnalysisContext();
             const result = await this.runAnalysisLoop(systemPrompt, userPrompt, analysisContext);
 
             await this.logAnalysisResults(userPrompt, result, analysisContext);
-            
+
             return result;
         } catch (error: any) {
             console.error(`❌ Analysis failed:`, error);
@@ -120,7 +120,7 @@ export class MVPStandaloneAgent {
             startTime: Date.now(),
             toolCalls: [] as ToolCall[],
             iterations: 0,
-            analysisData: {}
+            analysisData: '',
         };
     }
 
@@ -141,7 +141,7 @@ export class MVPStandaloneAgent {
             if (extractedToolCalls.length === 0) {
                 context.analysisData += currentResponse;
             }
-
+            
             // Break if any tool call is 'finish_analyze'
             if (extractedToolCalls.some(tc => tc.name === 'finish_analyze')) {
                 console.log(`✅ 'finish_analyze' tool called. Stopping analysis loop.`);
@@ -181,7 +181,11 @@ export class MVPStandaloneAgent {
                 allToolCalls.push(toolCall);
 
                 if (this.config.debugMode) {
-                    console.log(`  Result:`, result);
+                    const resultStr = typeof result === 'string' ? result : JSON.stringify(result);
+                    const preview = resultStr.length > 150
+                        ? resultStr.slice(0, 100) + ' ... ' + resultStr.slice(-50)
+                        : resultStr;
+                    console.log(`  Result:`, preview);
                 }
             } catch (error: any) {
                 console.error(`  Error executing tool ${toolCall.name}:`, error);

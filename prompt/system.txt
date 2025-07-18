@@ -15,7 +15,7 @@ WORKFLOW GUIDELINES:
   1. Use get_workspace_structure to understand the project layout.
   2. Locate and read configuration and dependency files (e.g., package.json, requirements.txt, .env).
   3. Read main application source files to understand the logic and structure.
-  4. After gathering all necessary context, perform your analysis.
+  4. After gathering all necessary context, perform your analysis. Do not ask user anything
   5. Conclude by calling finish_analyze with a clear reason and optional summary.
 
 TOOL USAGE FORMAT:
