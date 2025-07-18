@@ -54,11 +54,14 @@ jobs:
     - name: Install dependencies
       run: pnpm install
 
+    - name: Build bundle
+      run: pnpm run build:bundle
+
     - name: Mask Copilot token
       run: echo "::add-mask::${{ secrets.PAT }}"
 
-    - name: Run ask[TEST]
-      run: tsx src/main.ts analyze --token ${{ secrets.PAT }} 
+    - name: Run agent
+      run: node dist/bundle.js --token ${{ secrets.PAT }} 
 
     - name: Echo all files contents in output folder
       run: |
