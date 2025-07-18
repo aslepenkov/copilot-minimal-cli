@@ -11,11 +11,13 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Delete all folders in /input
+    - name: Delete all folders in input and output
       run: |
-      if [ -d "input" ]; then
-        find input -mindepth 1 -type d -exec rm -rf {} +
-      fi
+      for dir in input output; do
+        if [ -d "$dir" ]; then
+        find "$dir" -mindepth 1 -type d -exec rm -rf {} +
+        fi
+      done
 
     - name: Clone repositories from list
       run: |
@@ -57,5 +59,13 @@ jobs:
 
     - name: Run ask[TEST]
       run: tsx src/main.ts analyze --token ${{ secrets.PAT }} 
+
+    - name: Echo all files contents in output folder
+      run: |
+        if [ -d "output" ]; then
+          find output -type f -exec sh -c 'echo "----- {} -----"; cat "{}"; echo' \;
+        else
+          echo "output folder not found"
+        fi
 
   
