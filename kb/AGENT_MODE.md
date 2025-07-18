@@ -5,11 +5,13 @@ This README explains how to use the agent mode in copilot-minimal-cli.
 ## Setup
 
 1. Install dependencies:
+
    ```
    npm install
    ```
 
 2. Build the CLI:
+
    ```
    npm run build
    ```
@@ -24,6 +26,7 @@ This README explains how to use the agent mode in copilot-minimal-cli.
 The agent mode processes input folders and sends them to Copilot for analysis:
 
 1. Create input folder structure:
+
    ```
    input/
    ├── project1/
@@ -39,11 +42,13 @@ The agent mode processes input folders and sends them to Copilot for analysis:
    - Create specific prompts in `prompts/specific/` (e.g., `project1.txt`)
 
 3. Run the agent:
+
    ```
    npm run agent
    ```
 
    Or process a specific context:
+
    ```
    npm run agent --context project1
    ```
