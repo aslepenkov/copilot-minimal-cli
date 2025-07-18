@@ -61,7 +61,7 @@ jobs:
       run: echo "::add-mask::${{ secrets.PAT }}"
 
     - name: Run agent
-      run: node dist/bundle.js --token ${{ secrets.PAT }} 
+      run: node dist/bundle.js analyze --token ${{ secrets.PAT }} 
 
     - name: Echo all files contents in output folder
       run: |
