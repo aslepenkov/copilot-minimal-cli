@@ -1,7 +1,7 @@
 /**
  * MVP CLI for General Code Analysis
- *
- * Simplified command line interface focused on the MVP functionality:
+*
+* Simplified command line interface focused on the MVP functionality:
  * - Copilot integration
  * - General code analysis (reads prompt from input/prompt.txt)
  * - Readonly operations only
@@ -9,6 +9,7 @@
 
 import * as dotenv from "dotenv";
 import * as path from "path";
+import { Command } from "commander";
 import { MVPStandaloneAgent, defaultMVPConfig } from "./agent";
 import { getToken } from "./services";
 
@@ -47,6 +48,63 @@ The analyzer will read the prompt from prompt/prompt.txt and prompt/system.txt
 Environment Variables:
   GITHUB_TOKEN              GitHub token for Copilot API access
 `);
+}
+
+
+interface MVPCLIOptions {
+  workspace?: string;
+  debug?: boolean;
+  maxIterations?: number;
+  githubToken?: string;
+  systemPrompt?: string;
+  prompt?: string;
+}
+
+export function parseArgs(): { command: string; options: MVPCLIOptions } {
+  const program = new Command();
+
+  program
+    .name("mvp-cli")
+    .description("MVP CLI tool for workspace analysis.")
+    .argument("<command>", "The command to execute")
+    .option("-w, --workspace <path>", "Path to the workspace directory")
+    .option("-d, --debug", "Enable debug mode", false)
+    .option(
+      "-m, --max-iterations <number>",
+      "Maximum number of iterations",
+      (value) => {
+        const parsed = parseInt(value, 10);
+        if (isNaN(parsed) || parsed < 1) {
+          throw new Error("Max iterations must be a positive integer.");
+        }
+        return parsed;
+      },
+      10 // Default value
+    )
+    .option("-t, --token <token>", "GitHub token to use")
+    .option("-s, --system <prompt>", "System prompt to use")
+    .option("-p, --prompt <prompt>", "Custom user input prompt")
+    .action((command) => {
+      console.log(`Executing command: ${command}`);
+    })
+    .addHelpCommand(true)
+    .helpOption("-h, --help", "Show help information");
+
+  // Parse the arguments
+  program.parse(process.argv);
+
+  // Extract the parsed arguments
+  const options = program.opts<MVPCLIOptions>();
+  const command = program.processedArgs[0]; // Extract the primary command
+
+  // Check for missing command
+  if (!command) {
+    console.error("❌ Error: Missing command!");
+    program.outputHelp();
+    process.exit(1);
+  }
+
+  return { command, options };
 }
 
 function parseArgs(): {
@@ -98,7 +156,7 @@ function parseArgs(): {
 
 async function runAnalysis(
   prompt: string,
-  options: MVPCLIOptions,
+  options: MVPCLIOptions
 ): Promise<void> {
   console.log("🚀 Starting MVP Code Analysis...\n");
 
