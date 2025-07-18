@@ -139,9 +139,13 @@ export class MVPStandaloneAgent {
             const extractedToolCalls = this.extractToolCalls(currentResponse);
 
             if (extractedToolCalls.length === 0) {
-                console.log(`📊 Analysis complete - no more tool calls needed {TODO STOP HERE EXIT LOOP}`);
                 context.analysisData += currentResponse;
-                // break;
+            }
+
+            // Break if any tool call is 'finish_analyze'
+            if (extractedToolCalls.some(tc => tc.name === 'finish_analyze')) {
+                console.log(`✅ 'finish_analyze' tool called. Stopping analysis loop.`);
+                break;
             }
 
             await this.executeToolCalls(extractedToolCalls, context.toolCalls);
@@ -209,15 +213,14 @@ export class MVPStandaloneAgent {
     }
 
     private async buildUserPrompt(request: string): Promise<string> {
-        const template = `WORKSPACE CONTEXT:
-            Working Directory: {{workspacePath}}
-            Workspace Structure:
-            {{workspaceStructure}}
-
+        const template = `ANALYSIS REQUEST: {{request}}
             AVAILABLE TOOLS:
-            {{toolDescriptions}}
 
-            ANALYSIS REQUEST: {{request}}`;
+            {{toolDescriptions}}
+            
+            WORKSPACE CONTEXT:
+            Working Directory: {{workspacePath}}
+            Workspace Structure: {{workspaceStructure}}`;
         const workspaceStructure = await this.fileSystem.getWorkspaceStructure(2000, 1);
         const toolDescriptions = this.getToolDescriptions();
 
