@@ -108,8 +108,8 @@ async function runAnalysis(
     };
 
     // Validate API access
-    if (!process.env.GITHUB_TOKEN) {
-        console.error("❌ GitHub token or is required for Copilot API access");
+    if (!options.githubToken && !process.env.GITHUB_TOKEN) {
+        console.error("❌ GitHub token is required for Copilot API access");
         await getToken();
         return;
     }
