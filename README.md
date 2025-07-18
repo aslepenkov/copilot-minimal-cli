@@ -14,43 +14,20 @@ A minimalistic, prompt-driven code analysis tool powered by GitHub Copilot API.
 ## Quick Start
 
 ```bash
-# Install dependencies
-npm install
+# start container
+docker compose up -d 
 
-# Run analysis on current workspace
-npm run analyze
+docker exec -it copilot-minimal-cli node dist/bundle.js analyze -- --workspace ./input/react/sample --max-iterations 10 --debug    
 
-npm run analyze -- --workspace ./some folder/ --max-iterations 2 --debug
+docker exec -it copilot-minimal-cli node dist/bundle.js analyze  # uses /app/input/ by default
+
+#Stop and remove container
+docker compose down
 ```
-
-## Docker Usage
-
-Build and run the application in a Docker container:
-
-```bash
-# Build the Docker image
-docker build -t copilot-minimal-cli:latest .
-
-# Rebuild without cache (removes old image and builds fresh)
-docker image prune -f
-
-# Run with persistent data storage (container manages its own .env)
-docker run -d --name copilot-minimal-cli \
-    -v $(pwd)/logs:/app/logs \
-    -v $(pwd)/input:/app/input \
-    --restart unless-stopped \
-    copilot-minimal-cli:latest
-
-# Execute analysis commands in running container
-docker exec -it copilot-minimal-cli npm run analyze  # uses /app/input/ by default
-docker exec -it copilot-minimal-cli npm run analyze -- --workspace ./input/  --max-iterations 2 --debug
 
 # Get shell access to running container
 docker exec -it copilot-minimal-cli  sh
 
-# Stop and remove container
-docker stop copilot-minimal-cli  && docker rm copilot-minimal-cli 
-```
 
 **Volume Mappings:**
 - `logs:/app/logs` - Analysis logs and outputs
