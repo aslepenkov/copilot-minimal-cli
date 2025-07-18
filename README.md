@@ -212,8 +212,6 @@ copilot-minimal-cli/
 ├── prompt/                    # External configuration and templates
 │   ├── prompt.txt             # Analysis request
 │   ├── system.txt             # System instructions
-│   ├── user-prompt-template.txt
-│   └── tool-results-template.txt
 ├── input/                     # Example or sample input workspaces
 │   └── ...
 ├── logs/                      # Analysis outputs
