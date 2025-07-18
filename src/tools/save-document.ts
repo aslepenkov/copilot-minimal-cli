@@ -34,11 +34,11 @@ export class SaveDocumentTool implements ITool {
         required: ['content']
     };
 
-    private readonly logsPath: string;
+    private readonly outputPath: string;
     private readonly allowedExtensions = ['.md', '.json', '.txt'];
 
     constructor() {
-        this.logsPath = path.join(process.cwd(), 'logs');
+        this.outputPath = path.join(process.cwd(), 'output');
     }
 
     async execute(args: { filename?: string; filePath?: string; content: string; description?: string }): Promise<any> {
@@ -78,7 +78,7 @@ export class SaveDocumentTool implements ITool {
             await this.ensureLogsDirectory();
 
             // Generate full file path
-            const filePath = path.join(this.logsPath, sanitizedFilename);
+            const filePath = path.join(this.outputPath, sanitizedFilename);
 
             // Validate content based on file type
             const validationResult = this.validateContent(args.content, extension);
@@ -126,9 +126,9 @@ export class SaveDocumentTool implements ITool {
 
     private async ensureLogsDirectory(): Promise<void> {
         try {
-            await fs.access(this.logsPath);
+            await fs.access(this.outputPath);
         } catch {
-            await fs.mkdir(this.logsPath, { recursive: true });
+            await fs.mkdir(this.outputPath, { recursive: true });
         }
     }
 
