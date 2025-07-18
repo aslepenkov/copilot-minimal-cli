@@ -1,7 +1,7 @@
 /**
  * MVP CLI for General Code Analysis
-*
-* Simplified command line interface focused on the MVP functionality:
+ *
+ * Simplified command line interface focused on the MVP functionality:
  * - Copilot integration
  * - General code analysis (reads prompt from input/prompt.txt)
  * - Readonly operations only
@@ -50,7 +50,6 @@ Environment Variables:
 `);
 }
 
-
 interface MVPCLIOptions {
   workspace?: string;
   debug?: boolean;
@@ -79,7 +78,7 @@ export function parseArgs(): { command: string; options: MVPCLIOptions } {
         }
         return parsed;
       },
-      10 // Default value
+      10, // Default value
     )
     .option("-t, --token <token>", "GitHub token to use")
     .option("-s, --system <prompt>", "System prompt to use")
@@ -156,7 +155,7 @@ function parseArgs(): {
 
 async function runAnalysis(
   prompt: string,
-  options: MVPCLIOptions
+  options: MVPCLIOptions,
 ): Promise<void> {
   console.log("🚀 Starting MVP Code Analysis...\n");
 
