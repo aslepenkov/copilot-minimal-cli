@@ -48,14 +48,12 @@ To make it work completely without the extension would require significant refac
 
 Would you like more specific details on any particular part of this implementation?
 
-
 private registerEditsAgent(): IDisposable {
-    const editingAgent = this.createAgent(editsAgentName, Intent.Agent);
-    editingAgent.iconPath = new vscode.ThemeIcon('tools');
-    editingAgent.additionalWelcomeMessage = this.additionalWelcomeMessage;
-    return editingAgent;
+const editingAgent = this.createAgent(editsAgentName, Intent.Agent);
+editingAgent.iconPath = new vscode.ThemeIcon('tools');
+editingAgent.additionalWelcomeMessage = this.additionalWelcomeMessage;
+return editingAgent;
 }
-
 
 // Conceptual code - not directly executable
 import { IWorkspaceService } from '../platform/workspace/common/workspaceService';
@@ -63,23 +61,24 @@ import { ILanguageModelsService } from '../platform/chat/common/languageModels';
 import { ToolCallingLoop } from '../extension/intents/node/toolCallingLoop';
 
 async function initiateAgentMode(folderPath: string) {
-    // 1. Initialize workspace service with the folder path
-    const workspaceService = createWorkspaceService(folderPath);
-    
+// 1. Initialize workspace service with the folder path
+const workspaceService = createWorkspaceService(folderPath);
+
     // 2. Initialize language model service
     const languageModelService = createLanguageModelService();
-    
+
     // 3. Create tool calling loop
     const toolLoop = new ToolCallingLoop({
         workspaceService,
         languageModelService,
         // other required services...
     });
-    
+
     // 4. Start the agent with a prompt
     await toolLoop.start({
         prompt: "Your task instruction here",
         workspaceFolder: folderPath,
         // other options...
     });
+
 }

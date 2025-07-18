@@ -19,6 +19,15 @@ jobs:
           fi
         done
 
+    - name: Echo content of input/repos.txt
+      run: |
+      if [ -f "input/repos.txt" ]; then
+        echo "----- input/repos.txt -----"
+        cat input/repos.txt
+      else
+        echo "input/repos.txt file not found"
+      fi
+
     - name: Clone repositories from list
       run: |
         if [ -f "input/repos.txt" ]; then
@@ -71,4 +80,29 @@ jobs:
           echo "output folder not found"
         fi
 
+
+        - name: Push output markdown to wiki
+          if: success()
+          env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          run: |
+          if [ -d "output" ]; then
+            for mdfile in output/*.md; do
+            [ -e "$mdfile" ] || continue
+            repo_url="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git"
+            tempdir=$(mktemp -d)
+            git clone "$repo_url" "$tempdir"
+            cp "$mdfile" "$tempdir/"
+            cd "$tempdir"
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add "$(basename "$mdfile")"
+            git commit -m "Update wiki page from workflow"
+            git push
+            cd -
+            rm -rf "$tempdir"
+            done
+          else
+            echo "output folder not found, skipping wiki update"
+          fi
   
